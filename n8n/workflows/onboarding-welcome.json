@@ -1,0 +1,109 @@
+{
+  "name": "RailReady — Onboarding Email de Bienvenue",
+  "description": "Déclenché après inscription. Envoie un email de bienvenue personnalisé via Resend, puis programme un email de rappel J+3 si le test de compatibilité n'a pas été complété.",
+  "nodes": [
+    {
+      "name": "Webhook — Nouveau Utilisateur",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": {
+        "path": "railready/new-user",
+        "httpMethod": "POST",
+        "responseMode": "onReceived"
+      },
+      "notes": "Appelé depuis le trigger Supabase handle_new_user via Edge Function"
+    },
+    {
+      "name": "Valider les données",
+      "type": "n8n-nodes-base.if",
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.email }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Email Bienvenue via Resend",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "headers": {
+          "Authorization": "Bearer {{ $env.RESEND_API_KEY }}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "from": "RailReady <bonjour@railready.fr>",
+          "to": "={{ $json.email }}",
+          "subject": "Bienvenue sur RailReady 🚆",
+          "html": "<!-- Template email HTML bienvenue personnalisé -->"
+        }
+      }
+    },
+    {
+      "name": "Attendre 3 jours",
+      "type": "n8n-nodes-base.wait",
+      "parameters": {
+        "amount": 3,
+        "unit": "days"
+      }
+    },
+    {
+      "name": "Vérifier si test complété",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/user_quiz_sessions?user_id=eq.{{ $json.user_id }}&status=eq.completed&select=id",
+        "headers": {
+          "apikey": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}",
+          "Authorization": "Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+        }
+      }
+    },
+    {
+      "name": "Test complété ?",
+      "type": "n8n-nodes-base.if",
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.length }}",
+              "operation": "smallerEqual",
+              "value2": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Email Relance Test Compatibilité",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "body": {
+          "from": "RailReady <bonjour@railready.fr>",
+          "to": "={{ $('Webhook — Nouveau Utilisateur').item.json.email }}",
+          "subject": "Avez-vous fait votre test de compatibilité ? 🎯",
+          "html": "<!-- Template email relance test -->"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook — Nouveau Utilisateur": { "main": [["Valider les données"]] },
+    "Valider les données": { "main": [["Email Bienvenue via Resend"], []] },
+    "Email Bienvenue via Resend": { "main": [["Attendre 3 jours"]] },
+    "Attendre 3 jours": { "main": [["Vérifier si test complété"]] },
+    "Vérifier si test complété": { "main": [["Test complété ?"]] },
+    "Test complété ?": { "main": [["Email Relance Test Compatibilité"], []] }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  }
+}
