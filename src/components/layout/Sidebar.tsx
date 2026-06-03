@@ -17,7 +17,6 @@ const NAV_BOTTOM = [
   { href: '/a-propos', icon: 'ℹ️', label: 'À propos' },
 ]
 
-// Email du fondateur — seul accès admin
 const ADMIN_EMAIL = 'saidanib76620@gmail.com'
 
 interface Props {
@@ -43,7 +42,6 @@ export default function Sidebar({ prenom, userEmail }: Props) {
 
   return (
     <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-gray-200 flex-shrink-0 h-screen sticky top-0">
-      {/* Logo */}
       <div className="p-6 border-b border-gray-100">
         <Link href="/" className="flex items-center gap-2">
           <span className="text-2xl">🚆</span>
@@ -56,7 +54,6 @@ export default function Sidebar({ prenom, userEmail }: Props) {
         </div>
       </div>
 
-      {/* Profil rapide */}
       <div className="px-4 py-4 border-b border-gray-100">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-blue-700 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
@@ -69,7 +66,6 @@ export default function Sidebar({ prenom, userEmail }: Props) {
         </div>
       </div>
 
-      {/* Navigation principale */}
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {NAV_ITEMS.map(item => (
           <Link
@@ -87,7 +83,6 @@ export default function Sidebar({ prenom, userEmail }: Props) {
         ))}
       </nav>
 
-      {/* Navigation secondaire */}
       <div className="p-4 border-t border-gray-100 space-y-1">
         {NAV_BOTTOM.map(item => (
           <Link
@@ -104,7 +99,6 @@ export default function Sidebar({ prenom, userEmail }: Props) {
           </Link>
         ))}
 
-        {/* Lien admin — visible uniquement pour le fondateur */}
         {userEmail === ADMIN_EMAIL && (
           <Link
             href="/admin"
@@ -128,7 +122,6 @@ export default function Sidebar({ prenom, userEmail }: Props) {
         </button>
       </div>
 
-      {/* Disclaimer bas de page */}
       <div className="px-4 pb-4">
         <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-400 leading-relaxed">
           Plateforme indépendante · Non affiliée à la SNCF

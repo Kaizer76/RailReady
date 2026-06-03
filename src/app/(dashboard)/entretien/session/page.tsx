@@ -472,11 +472,10 @@ export default function EntretienSessionPage() {
             </button>
           </div>
           <p className="text-xs text-gray-400 text-center mt-2">
-            Répondez comme en vrai entretien · Tapez <code className="bg-gray-100 px-1 rounded">/fin</code> pour terminer
+            Répondez comme en vrai entretien - Tapez <code className="bg-gray-100 px-1 rounded">/fin</code> pour terminer
           </p>
         </div>
       )}
     </div>
   )
 }
-         

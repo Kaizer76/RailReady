@@ -1112,5 +1112,5 @@ export const getMetiersByCategorie = (categorie: FicheMetier['categorie']): Fich
   METIERS.filter(m => m.categorie === categorie)
 
 // Correspondance slug → questions d'entretien
-export const METIER_SLUGS = METIERS.map(m => m.slug) as const
-export type MetierSlug = typeof METIER_SLUGS[number]
+export const METIER_SLUGS: string[] = METIERS.map(m => m.slug)
+export type MetierSlug = string

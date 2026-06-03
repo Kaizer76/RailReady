@@ -14,18 +14,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar desktop */}
       <Sidebar prenom={prenom} userEmail={user.email || ''} />
-
-      {/* Contenu principal */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile header */}
         <MobileNav prenom={prenom} />
-
-        {/* Bannière bêta */}
         <BetaBanner />
-
-        {/* Page content */}
         <main className="flex-1 overflow-y-auto">
           {children}
         </main>
