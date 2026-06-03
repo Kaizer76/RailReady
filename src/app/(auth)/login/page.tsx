@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-export default function LoginPage() {
+// Composant interne qui utilise useSearchParams — doit être dans Suspense
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirect = searchParams.get('redirect') || '/dashboard'
@@ -37,7 +38,7 @@ export default function LoginPage() {
     <div className="card p-8 bg-white shadow-2xl">
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Connexion</h1>
-        <p className="text-gray-500 text-sm mt-1">Accédez à votre espace RailReady</p>
+        <p className="text-gray-500 text-sm mt-1">Accedez a votre espace RailReady</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -85,15 +86,28 @@ export default function LoginPage() {
       <div className="mt-6 text-center text-sm text-gray-500">
         Pas encore de compte ?{' '}
         <Link href="/register" className="text-blue-700 font-semibold hover:underline">
-          Créer mon compte
+          Creer mon compte
         </Link>
       </div>
 
       <div className="mt-4 pt-4 border-t border-gray-100 text-center">
         <Link href="/" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
-          ← Retour à l'accueil
+          Retour a l&apos;accueil
         </Link>
       </div>
     </div>
+  )
+}
+
+// Composant page — enveloppe LoginForm dans Suspense (requis Next.js 14)
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="card p-8 bg-white shadow-2xl flex items-center justify-center min-h-48">
+        <div className="text-gray-400 text-sm">Chargement...</div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }

@@ -5,7 +5,7 @@
 // /entretien/session?poste=conducteur-de-train&niveau=debutant
 // ============================================================
 
-import { useState, useEffect, useRef } from 'react'
+import { Suspense, useState, useEffect, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getMetierBySlug } from '@/data/metiers'
@@ -29,7 +29,7 @@ interface Evaluation {
   prochaines_etapes: string[]
 }
 
-export default function EntretienSessionPage() {
+function EntretienSessionContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const slug = searchParams.get('poste') || 'conducteur-de-train'
@@ -477,5 +477,18 @@ export default function EntretienSessionPage() {
         </div>
       )}
     </div>
+  )
+}
+
+// Wrapper Suspense — requis par Next.js 14 pour useSearchParams
+export default function EntretienSessionPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-gray-400 text-sm">Chargement de la session...</div>
+      </div>
+    }>
+      <EntretienSessionContent />
+    </Suspense>
   )
 }
