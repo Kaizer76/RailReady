@@ -252,12 +252,25 @@ RÈGLES ABSOLUES
 // TYPES
 // ============================================================
 
+export interface CandidatProfil {
+  prenom?: string
+  age?: number | null
+  niveau_etudes?: string
+  diplome?: string
+  experience_annees?: number | null
+  experience_description?: string
+  metier_vise?: string
+  region?: string
+  disponibilite?: string
+}
+
 export interface EntretienConfig {
   poste: string
   slug: string
   niveau: 'debutant' | 'intermediaire' | 'avance'
   candidatNom?: string
   contexte?: string // reconversion, expérience, etc.
+  profil?: CandidatProfil
 }
 
 export type ScoreLabel = 'Excellent' | 'Solide' | 'Moyen' | 'Insuffisant'
@@ -347,6 +360,39 @@ export class RecrutementAgent extends BaseAgent {
     })
   }
 
+  // Contexte candidat pour le système prompt
+  buildCandidatContext(config: EntretienConfig): string {
+    const p = config.profil
+    if (!p) return ''
+
+    const parts: string[] = []
+
+    if (p.age) parts.push(`- Âge : ${p.age} ans`)
+    if (p.niveau_etudes) parts.push(`- Niveau d'études : ${p.niveau_etudes}`)
+    if (p.diplome) parts.push(`- Diplôme : ${p.diplome}`)
+    if (p.experience_annees !== null && p.experience_annees !== undefined) {
+      parts.push(`- Expérience professionnelle : ${p.experience_annees} an(s)`)
+    }
+    if (p.experience_description) parts.push(`- Contexte : ${p.experience_description}`)
+    if (p.region) parts.push(`- Région : ${p.region}`)
+    if (p.disponibilite) parts.push(`- Disponibilité : ${p.disponibilite}`)
+
+    if (parts.length === 0) return ''
+
+    return `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROFIL DU CANDIDAT (pour adaptation)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${parts.join('\n')}
+
+ADAPTATION SELON LE PROFIL :
+${(p.age && p.age < 22) ? '- Candidat jeune : questions d\'orientation adaptées, pas de questions sur longue expérience. Valoriser la motivation et l\'enthousiasme.' : ''}
+${(p.experience_annees && p.experience_annees > 5) ? '- Candidat expérimenté : approfondir la reconversion, valoriser le transfert de compétences. Questions STAR sur expériences réelles.' : ''}
+${(p.experience_annees === 0 || p.experience_annees === null) ? '- Peu ou pas d\'expérience : questions centrées sur la personnalité, les projets scolaires, les stages.' : ''}
+${p.diplome ? `- Tenir compte du diplôme (${p.diplome}) dans les questions techniques.` : ''}
+`
+  }
+
   // Message d'ouverture de l'entretien
   getOpeningMessage(config: EntretienConfig): string {
     const meta = METIER_META[config.slug] || {
@@ -361,7 +407,10 @@ export class RecrutementAgent extends BaseAgent {
       avance: 'avec une expérience dans le domaine',
     }[config.niveau]
 
-    return `Bonjour${config.candidatNom ? ` ${config.candidatNom}` : ''}, je suis recruteur RH spécialisé dans les métiers ferroviaires. Merci de vous être rendu(e) disponible pour cet entretien de simulation concernant le poste de **${meta.label}**.
+    const prenom = config.profil?.prenom || config.candidatNom
+    const ageInfo = config.profil?.age ? ` (${config.profil.age} ans)` : ''
+
+    return `Bonjour${prenom ? ` ${prenom}` : ''}${ageInfo}, je suis recruteur RH spécialisé dans les métiers ferroviaires. Merci de vous être rendu(e) disponible pour cet entretien de simulation concernant le poste de **${meta.label}**.
 
 Quelques mots sur le déroulement : cet entretien simulé dure environ ${meta.duree}. Je vais commencer par vous demander de vous présenter, puis nous aborderons vos motivations, votre connaissance du métier, et je vous poserai quelques questions sur des situations concrètes. À la fin, vous pourrez me poser vos questions.
 

@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: '/metiers', icon: '📋', label: 'Métiers' },
   { href: '/test-compatibilite', icon: '🧭', label: 'Test de compatibilité' },
   { href: '/entretien', icon: '🎤', label: 'Simulateur d\'entretien' },
+  { href: '/psychotechnique', icon: '🧠', label: 'Psychotechnique' },
   { href: '/mentor', icon: '💬', label: 'Mentor Ferroviaire' },
 ]
 
@@ -44,8 +45,10 @@ export default function Sidebar({ prenom, userEmail }: Props) {
     <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-gray-200 flex-shrink-0 h-screen sticky top-0">
       <div className="p-6 border-b border-gray-100">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-2xl">🚆</span>
-          <span className="font-bold text-lg text-gray-900">RailReady</span>
+          <img src="/logo-square.svg" alt="RailReady" className="w-8 h-8" />
+          <span className="font-black text-lg text-gray-900 tracking-tight">
+            Rail<span className="text-blue-700">Ready</span>
+          </span>
         </Link>
         <div className="mt-1">
           <span className="text-xs text-orange-500 font-medium bg-orange-50 px-2 py-0.5 rounded-full">

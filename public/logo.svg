@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 52" fill="none">
+  <!-- Rail track motif -->
+  <rect x="0" y="22" width="44" height="3" rx="1.5" fill="#1d4ed8" opacity="0.15"/>
+  <rect x="0" y="28" width="44" height="3" rx="1.5" fill="#1d4ed8" opacity="0.15"/>
+  <rect x="8" y="19" width="3" height="12" rx="1.5" fill="#1d4ed8" opacity="0.2"/>
+  <rect x="18" y="19" width="3" height="12" rx="1.5" fill="#1d4ed8" opacity="0.2"/>
+  <rect x="28" y="19" width="3" height="12" rx="1.5" fill="#1d4ed8" opacity="0.2"/>
+  <rect x="38" y="19" width="3" height="12" rx="1.5" fill="#1d4ed8" opacity="0.2"/>
+
+  <!-- "R" mark -->
+  <rect x="8" y="10" width="28" height="32" rx="6" fill="#1d4ed8"/>
+  <text x="22" y="31" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="800" fill="white" text-anchor="middle">R</text>
+
+  <!-- Wordmark -->
+  <text x="50" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="800" fill="#111827" letter-spacing="-0.5">Rail</text>
+  <text x="86" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="800" fill="#1d4ed8" letter-spacing="-0.5">Ready</text>
+</svg>

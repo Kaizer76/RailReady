@@ -29,7 +29,9 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/mentor') ||
     request.nextUrl.pathname.startsWith('/test-compatibilite') ||
     request.nextUrl.pathname.startsWith('/entretien') ||
-    request.nextUrl.pathname.startsWith('/profil')
+    request.nextUrl.pathname.startsWith('/profil') ||
+    request.nextUrl.pathname.startsWith('/psychotechnique') ||
+    request.nextUrl.pathname.startsWith('/admin')
 
   if (isDashboard && !user) {
     const url = request.nextUrl.clone()

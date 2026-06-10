@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { recrutementAgent } from '@/agents/recrutement-agent'
 import type { AgentMessage } from '@/agents/base-agent'
+import type { CandidatProfil } from '@/agents/recrutement-agent'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,7 +12,7 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
-      return NextResponse.json({ error: 'Non authentifie' }, { status: 401 })
+      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
     }
 
     const body = await req.json()
@@ -24,11 +25,39 @@ export async function POST(req: NextRequest) {
     }
 
     if (isOpening && config) {
+      // Récupérer le profil candidat pour personnalisation
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('age, niveau_etudes, diplome, experience_annees, experience_description, region, disponibilite')
+        .eq('id', user.id)
+        .single()
+
+      const profil: CandidatProfil = {
+        prenom: user.user_metadata?.prenom || undefined,
+        age: profileData?.age ?? null,
+        niveau_etudes: profileData?.niveau_etudes ?? undefined,
+        diplome: profileData?.diplome ?? undefined,
+        experience_annees: profileData?.experience_annees ?? null,
+        experience_description: profileData?.experience_description ?? undefined,
+        region: profileData?.region ?? undefined,
+        disponibilite: profileData?.disponibilite ?? undefined,
+      }
+
+      // Contexte profil injecté dans le system prompt (messages côté recruteur)
+      const candidatContext = recrutementAgent.buildCandidatContext({
+        poste: config.poste,
+        slug: config.slug,
+        niveau: config.niveau as 'debutant' | 'intermediaire' | 'avance',
+        profil,
+      })
+
       const opening = recrutementAgent.getOpeningMessage({
         poste: config.poste,
         slug: config.slug,
         niveau: config.niveau as 'debutant' | 'intermediaire' | 'avance',
+        profil,
       })
+
       await supabase.from('ai_sessions').upsert({
         id: sessionId,
         user_id: user.id,
@@ -36,8 +65,10 @@ export async function POST(req: NextRequest) {
         poste: config.poste,
         niveau: config.niveau,
         status: 'active',
+        metadata: { candidatContext },
       }, { onConflict: 'id', ignoreDuplicates: true })
-      return NextResponse.json({ opening })
+
+      return NextResponse.json({ opening, candidatContext })
     }
 
     if (isFinal) {

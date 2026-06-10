@@ -83,7 +83,13 @@ function LoginForm() {
         </button>
       </form>
 
-      <div className="mt-6 text-center text-sm text-gray-500">
+      <div className="mt-4 text-center">
+        <Link href="/forgot-password" className="text-sm text-gray-400 hover:text-blue-600 transition-colors">
+          Mot de passe oublié ?
+        </Link>
+      </div>
+
+      <div className="mt-4 text-center text-sm text-gray-500">
         Pas encore de compte ?{' '}
         <Link href="/register" className="text-blue-700 font-semibold hover:underline">
           Creer mon compte

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <rect width="48" height="48" rx="12" fill="#1d4ed8"/>
+  <!-- R -->
+  <text x="24" y="33" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="900" fill="white" text-anchor="middle" letter-spacing="-1">R</text>
+  <!-- Rail accent line -->
+  <rect x="10" y="37" width="28" height="2.5" rx="1.25" fill="white" opacity="0.3"/>
+</svg>

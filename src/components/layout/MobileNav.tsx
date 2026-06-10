@@ -10,7 +10,12 @@ const NAV_ITEMS = [
   { href: '/metiers', icon: '📋', label: 'Métiers' },
   { href: '/test-compatibilite', icon: '🧭', label: 'Test' },
   { href: '/entretien', icon: '🎤', label: 'Entretien' },
-  { href: '/mentor', icon: '💬', label: 'Mentor' },
+  { href: '/psychotechnique', icon: '🧠', label: 'Entraîn.' },
+]
+
+const NAV_DRAWER_EXTRA = [
+  { href: '/mentor', icon: '💬', label: 'Mentor Ferroviaire' },
+  { href: '/a-propos', icon: 'ℹ️', label: 'À propos' },
 ]
 
 export default function MobileNav({ prenom }: { prenom: string }) {
@@ -34,8 +39,10 @@ export default function MobileNav({ prenom }: { prenom: string }) {
       {/* Header mobile */}
       <header className="lg:hidden bg-white border-b border-gray-200 px-4 h-14 flex items-center justify-between sticky top-0 z-40">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-xl">🚆</span>
-          <span className="font-bold text-gray-900">RailReady</span>
+          <img src="/logo-square.svg" alt="RailReady" className="w-7 h-7" />
+          <span className="font-black text-gray-900 tracking-tight">
+            Rail<span className="text-blue-700">Ready</span>
+          </span>
         </Link>
         <button
           onClick={() => setMenuOpen(!menuOpen)}
@@ -55,7 +62,7 @@ export default function MobileNav({ prenom }: { prenom: string }) {
             </div>
 
             <nav className="space-y-1 mb-8">
-              {NAV_ITEMS.map(item => (
+              {[...NAV_ITEMS, ...NAV_DRAWER_EXTRA].map(item => (
                 <Link
                   key={item.href}
                   href={item.href}
