@@ -507,16 +507,17 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (user && sessionId) {
-      await supabase
+      const { error: upsertError } = await supabase
         .from('user_quiz_sessions')
-        .update({
+        .upsert({
+          id: sessionId,
+          user_id: user.id,
           status: 'completed',
           score: scoreGlobal,
           results: result,
           completed_at: new Date().toISOString(),
-        })
-        .eq('id', sessionId)
-        .eq('user_id', user.id)
+        }, { onConflict: 'id' })
+      if (upsertError) console.error('[score] upsert error:', JSON.stringify(upsertError))
 
       // Sauvegarde du métier recommandé dans le profil
       await supabase

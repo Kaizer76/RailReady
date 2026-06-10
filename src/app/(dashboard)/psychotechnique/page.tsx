@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 
 const MODULES = [
@@ -173,18 +173,30 @@ function ExerciceModule({
 function ExerciceMemoire({ niveau, onBack }: { niveau: number; onBack: () => void }) {
   const lengths = [4, 6, 8]
   const seqLen = lengths[niveau - 1]
+  const displayTime = [3, 4, 5][niveau - 1]
   const [phase, setPhase] = useState<'display' | 'input' | 'result'>('display')
   const [sequence, setSequence] = useState<number[]>(() =>
     Array.from({ length: seqLen }, () => Math.floor(Math.random() * 10))
   )
   const [answer, setAnswer] = useState('')
   const [score, setScore] = useState<{ correct: number; total: number } | null>(null)
-  const displayTime = [3, 4, 5][niveau - 1]
+  const [countdown, setCountdown] = useState(displayTime)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  function start() {
-    setTimeout(() => setPhase('input'), displayTime * 1000)
-    setPhase('display')
-  }
+  // Auto-start au montage : compte à rebours puis passage en phase 'input'
+  useEffect(() => {
+    setCountdown(displayTime)
+    let remaining = displayTime
+    intervalRef.current = setInterval(() => {
+      remaining -= 1
+      setCountdown(remaining)
+      if (remaining <= 0) {
+        clearInterval(intervalRef.current!)
+        setPhase('input')
+      }
+    }, 1000)
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
+  }, [displayTime])
 
   function check() {
     const input = answer.replace(/\s/g, '').split('').map(Number)
@@ -197,11 +209,22 @@ function ExerciceMemoire({ niveau, onBack }: { niveau: number; onBack: () => voi
   }
 
   function restart() {
-    setSequence(Array.from({ length: seqLen }, () => Math.floor(Math.random() * 10)))
+    if (intervalRef.current) clearInterval(intervalRef.current)
+    const newSeq = Array.from({ length: seqLen }, () => Math.floor(Math.random() * 10))
+    setSequence(newSeq)
     setAnswer('')
     setScore(null)
     setPhase('display')
-    setTimeout(() => setPhase('input'), displayTime * 1000)
+    let remaining = displayTime
+    setCountdown(remaining)
+    intervalRef.current = setInterval(() => {
+      remaining -= 1
+      setCountdown(remaining)
+      if (remaining <= 0) {
+        clearInterval(intervalRef.current!)
+        setPhase('input')
+      }
+    }, 1000)
   }
 
   return (
@@ -225,7 +248,12 @@ function ExerciceMemoire({ niveau, onBack }: { niveau: number; onBack: () => voi
                 </span>
               ))}
             </div>
-            <p className="text-xs text-gray-400 mt-4">Disparaît dans {displayTime}s...</p>
+            <div className="mt-6 flex flex-col items-center gap-1">
+              <div className={`text-4xl font-black tabular-nums transition-all ${countdown <= 1 ? 'text-red-500 scale-125' : countdown <= 2 ? 'text-amber-500' : 'text-blue-600'}`}>
+                {countdown}
+              </div>
+              <p className="text-xs text-gray-400">seconde{countdown > 1 ? 's' : ''} restante{countdown > 1 ? 's' : ''}</p>
+            </div>
           </>
         )}
         {phase === 'input' && (
@@ -260,9 +288,6 @@ function ExerciceMemoire({ niveau, onBack }: { niveau: number; onBack: () => voi
         )}
       </div>
 
-      {phase === 'display' && (
-        <button onClick={start} className="btn-primary w-full hidden">Commencer</button>
-      )}
     </div>
   )
 }

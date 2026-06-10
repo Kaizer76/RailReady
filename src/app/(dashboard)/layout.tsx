@@ -13,12 +13,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const prenom = user.user_metadata?.prenom || user.email?.split('@')[0] || 'Candidat'
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-slate-50 flex relative">
+      {/* Watermark subtil RailReady */}
+      <div className="rr-watermark" aria-hidden="true" />
       <Sidebar prenom={prenom} userEmail={user.email || ''} />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 relative z-10">
         <MobileNav prenom={prenom} />
         <BetaBanner />
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto animate-fade-in-up">
           {children}
         </main>
       </div>
