@@ -77,6 +77,7 @@ export default async function ProfilPage() {
         </p>
         <ProfilForm
           userId={user.id}
+          userEmail={user.email ?? undefined}
           initialData={{
             age: profileData?.age ?? null,
             niveau_etudes: profileData?.niveau_etudes ?? '',

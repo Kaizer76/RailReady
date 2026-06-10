@@ -1025,6 +1025,17 @@ export const METIERS: FicheMetier[] = [
 export const getMetierBySlug = (slug: string): FicheMetier | undefined =>
   METIERS.find(m => m.slug === slug)
 
+// Source unique de vérité slug → libellé.
+// Toute la base de données stocke des SLUGS ; l'affichage passe par ce helper.
+export const getMetierLabel = (slug: string | null | undefined): string => {
+  if (!slug) return ''
+  return METIERS.find(m => m.slug === slug)?.nom ?? slug
+}
+
+// Options prêtes à l'emploi pour les <select> métier (value = slug)
+export const METIER_OPTIONS: { slug: string; nom: string }[] =
+  METIERS.map(m => ({ slug: m.slug, nom: m.nom }))
+
 export const getMetiersByCategorie = (categorie: FicheMetier['categorie']): FicheMetier[] =>
   METIERS.filter(m => m.categorie === categorie)
 

@@ -19,6 +19,7 @@ export default function RegisterPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (loading) return // anti double-submit : un seul signUp() par clic
     setError('')
     setLoading(true)
 
@@ -46,6 +47,8 @@ export default function RegisterPage() {
       console.error('[Register] signUp error:', error.message)
       if (error.message === 'User already registered') {
         setError('Un compte existe déjà avec cet email.')
+      } else if (error.message?.toLowerCase().includes('rate limit')) {
+        setError('Trop d\'emails envoyés récemment. Patientez une heure ou contactez le support. (Limite SMTP Supabase)')
       } else if (error.message?.includes('Database error')) {
         setError('Erreur base de données. Vérifiez les migrations Supabase.')
       } else {

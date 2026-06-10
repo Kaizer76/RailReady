@@ -21,6 +21,7 @@ export default function ForgotPasswordPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (status === 'loading') return // anti double-submit
     setStatus('loading')
     setErrorMsg('')
 
@@ -32,7 +33,10 @@ export default function ForgotPasswordPage() {
     })
 
     if (error) {
-      setErrorMsg('Une erreur est survenue. Vérifiez votre adresse email.')
+      console.error('[ForgotPassword] error:', error.message)
+      setErrorMsg(error.message?.toLowerCase().includes('rate limit')
+        ? 'Trop d\'emails envoyés récemment. Patientez avant de redemander un lien.'
+        : 'Une erreur est survenue. Vérifiez votre adresse email.')
       setStatus('error')
       return
     }

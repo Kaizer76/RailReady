@@ -2,16 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-
-const METIERS_OPTIONS = [
-  'Conducteur de train',
-  'Agent Circulation',
-  'Agent Commercial Trains (ASCT)',
-  'Contrôleur',
-  'Agent Escale',
-  'Technicien Maintenance',
-  'Agent Voie / Signalisation',
-]
+import { METIER_OPTIONS } from '@/data/metiers'
 
 const NIVEAUX_ETUDES = [
   'Brevet (3ème)',
@@ -51,12 +42,14 @@ interface ProfileData {
 
 interface ProfilFormProps {
   userId: string
+  userEmail?: string
   initialData: ProfileData
 }
 
-export default function ProfilForm({ userId, initialData }: ProfilFormProps) {
+export default function ProfilForm({ userId, userEmail, initialData }: ProfilFormProps) {
   const [data, setData] = useState<ProfileData>(initialData)
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
 
   function update(field: keyof ProfileData, value: string | number | null) {
     setData(prev => ({ ...prev, [field]: value }))
@@ -66,25 +59,42 @@ export default function ProfilForm({ userId, initialData }: ProfilFormProps) {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     setStatus('saving')
+    setErrorMsg('')
 
     const supabase = createClient()
+    const payload = {
+      id: userId,
+      // email requis (NOT NULL) si la ligne profile n'existe pas encore
+      ...(userEmail ? { email: userEmail } : {}),
+      age: data.age,
+      niveau_etudes: data.niveau_etudes || null,
+      diplome: data.diplome || null,
+      experience_annees: data.experience_annees,
+      experience_description: data.experience_description || null,
+      metier_vise: data.metier_vise || null,
+      region: data.region || null,
+      disponibilite: data.disponibilite || null,
+      updated_at: new Date().toISOString(),
+    }
     const { error } = await supabase
       .from('profiles')
-      .upsert({
-        id: userId,
-        age: data.age,
-        niveau_etudes: data.niveau_etudes || null,
-        diplome: data.diplome || null,
-        experience_annees: data.experience_annees,
-        experience_description: data.experience_description || null,
-        metier_vise: data.metier_vise || null,
-        region: data.region || null,
-        disponibilite: data.disponibilite || null,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'id' })
+      .upsert(payload, { onConflict: 'id' })
 
-    setStatus(error ? 'error' : 'saved')
-    if (!error) setTimeout(() => setStatus('idle'), 3000)
+    if (error) {
+      console.error('PROFILE_SAVE_ERROR', error)
+      console.error('PROFILE_SAVE_ERROR details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      })
+      setErrorMsg(error.message || 'Erreur inconnue')
+      setStatus('error')
+      return
+    }
+
+    setStatus('saved')
+    setTimeout(() => setStatus('idle'), 3000)
   }
 
   const inputClass = "w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
@@ -186,7 +196,8 @@ export default function ProfilForm({ userId, initialData }: ProfilFormProps) {
           onChange={e => update('metier_vise', e.target.value)}
         >
           <option value="">Sélectionner un métier...</option>
-          {METIERS_OPTIONS.map(m => <option key={m} value={m}>{m}</option>)}
+          {/* value = slug (source unique de vérité), affichage = libellé */}
+          {METIER_OPTIONS.map(m => <option key={m.slug} value={m.slug}>{m.nom}</option>)}
         </select>
       </div>
 
@@ -195,7 +206,9 @@ export default function ProfilForm({ userId, initialData }: ProfilFormProps) {
           <span className="text-sm text-green-600 font-medium">✓ Profil sauvegardé</span>
         )}
         {status === 'error' && (
-          <span className="text-sm text-red-600">Erreur lors de la sauvegarde</span>
+          <span className="text-sm text-red-600">
+            Erreur lors de la sauvegarde{errorMsg ? ` : ${errorMsg}` : ''}
+          </span>
         )}
         {(status === 'idle' || status === 'saving') && <span />}
 
