@@ -86,6 +86,9 @@ interface QuizSession {
   } | null
   completed_at: string | null
 }
+interface PsychoSession {
+  id: string; module: string; score: number; niveau: number; created_at: string
+}
 
 // ── Page ────────────────────────────────────────────────────────
 export default async function DashboardPage() {
@@ -93,7 +96,7 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   const prenom = user?.user_metadata?.prenom || 'Candidat'
 
-  const [quizRes, entretienRes, profileRes] = await Promise.all([
+  const [quizRes, entretienRes, profileRes, psychoRes] = await Promise.all([
     supabase.from('user_quiz_sessions').select('id, score, results, completed_at')
       .eq('user_id', user!.id).eq('status', 'completed')
       .order('completed_at', { ascending: false }).limit(3),
@@ -101,11 +104,21 @@ export default async function DashboardPage() {
       .eq('user_id', user!.id).order('created_at', { ascending: false }).limit(6),
     supabase.from('profiles').select('metier_vise, age, region, disponibilite')
       .eq('id', user!.id).single(),
+    supabase.from('psycho_sessions').select('id, module, score, niveau, created_at')
+      .eq('user_id', user!.id).order('created_at', { ascending: false }).limit(50),
   ])
 
   const quizSessions: QuizSession[] = (quizRes.data || []) as QuizSession[]
   const sessions: AiSession[] = (entretienRes.data || []) as AiSession[]
   const profile = profileRes.data
+  const psychoSessions: PsychoSession[] = (psychoRes.data || []) as PsychoSession[]
+
+  // Statistiques psychotechniques (P9)
+  const psychoTotal = psychoSessions.length
+  const psychoLast = psychoSessions[0]?.score ?? null
+  const psychoPrev = psychoSessions[1]?.score ?? null
+  const psychoBest = psychoTotal > 0 ? Math.max(...psychoSessions.map(p => p.score)) : null
+  const psychoProgression = (psychoLast !== null && psychoPrev !== null) ? psychoLast - psychoPrev : null
 
   const lastQuiz = quizSessions[0] ?? null
   const score = lastQuiz?.score ?? null
@@ -309,24 +322,100 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* KPI SECONDAIRES */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { icon: '&#x1F4CB;', value: METIERS.length, label: 'Fiches metiers', link: '/metiers', color: 'text-blue-700' },
-          { icon: '&#x1F9E0;', value: '4 modules', label: 'Exercices psycho', link: '/psychotechnique', color: 'text-purple-600' },
-          { icon: '&#x1F3C6;', value: lastQuiz?.results?.pointsForts?.length ?? 0, label: 'Points forts', link: hasQuiz ? '/test-compatibilite/resultats' : '/test-compatibilite', color: 'text-emerald-600' },
-          { icon: '&#x26A1;', value: weakDimensions.length > 0 ? weakDimensions.length : '—', label: 'A travailler', link: hasQuiz ? '/test-compatibilite/resultats' : '/test-compatibilite', color: weakDimensions.length > 0 ? 'text-amber-500' : 'text-gray-300' },
-        ].map((kpi, i) => (
-          <Link key={i} href={kpi.link}
-            className="card p-4 hover:border-blue-200 transition-all group">
-            <div className="text-xl mb-1" dangerouslySetInnerHTML={{ __html: kpi.icon }}/>
-            <div className={`text-2xl font-black ${kpi.color} group-hover:scale-105 transition-transform`}>
-              {kpi.value}
-            </div>
-            <div className="text-xs text-gray-400 mt-0.5">{kpi.label}</div>
-          </Link>
-        ))}
+      {/* PSYCHOTECHNIQUE — statistiques (P9) */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-bold text-gray-900">Psychotechnique</h2>
+          <Link href="/psychotechnique" className="text-xs text-blue-600 hover:underline">S&apos;entraîner</Link>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            {
+              icon: '&#x1F9E0;',
+              value: psychoLast !== null ? `${psychoLast} %` : '—',
+              label: 'Dernier score',
+              color: psychoLast === null ? 'text-gray-300' : psychoLast >= 70 ? 'text-emerald-600' : psychoLast >= 50 ? 'text-amber-500' : 'text-red-500',
+            },
+            {
+              icon: '&#x1F4C8;',
+              value: psychoProgression === null ? '—' : psychoProgression > 0 ? `+${psychoProgression}` : `${psychoProgression}`,
+              label: 'Progression',
+              color: psychoProgression === null ? 'text-gray-300' : psychoProgression >= 0 ? 'text-emerald-600' : 'text-red-500',
+            },
+            {
+              icon: '&#x1F3C6;',
+              value: psychoBest !== null ? `${psychoBest} %` : '—',
+              label: 'Meilleur score',
+              color: psychoBest === null ? 'text-gray-300' : 'text-blue-700',
+            },
+            {
+              icon: '&#x2705;',
+              value: psychoTotal,
+              label: 'Exercices realises',
+              color: psychoTotal > 0 ? 'text-gray-900' : 'text-gray-300',
+            },
+          ].map((kpi, i) => (
+            <Link key={i} href="/psychotechnique"
+              className="card p-4 hover:border-blue-200 transition-all group">
+              <div className="text-xl mb-1" dangerouslySetInnerHTML={{ __html: kpi.icon }}/>
+              <div className={`text-2xl font-black ${kpi.color} group-hover:scale-105 transition-transform`}>
+                {kpi.value}
+              </div>
+              <div className="text-xs text-gray-400 mt-0.5">{kpi.label}</div>
+            </Link>
+          ))}
+        </div>
       </div>
+
+      {/* POINTS FORTS / À TRAVAILLER — issus du test de compatibilité (P10) */}
+      {hasQuiz && (
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="card p-5">
+            <h3 className="font-bold text-gray-900 mb-3 text-sm">&#x1F4AA; Points forts</h3>
+            {(lastQuiz?.results?.pointsForts?.length ?? 0) > 0 ? (
+              <ul className="space-y-2">
+                {lastQuiz!.results!.pointsForts!.slice(0, 5).map((p, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                    <span className="text-emerald-500 flex-shrink-0">&#x2713;</span> {p}
+                  </li>
+                ))}
+              </ul>
+            ) : topDimensions.length > 0 ? (
+              <ul className="space-y-2">
+                {topDimensions.map(d => (
+                  <li key={d.dimension} className="flex items-start gap-2 text-sm text-gray-700">
+                    <span className="text-emerald-500 flex-shrink-0">&#x2713;</span> {d.label} ({d.score}%)
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-gray-400">Faites le test de compatibilite pour identifier vos forces.</p>
+            )}
+          </div>
+          <div className="card p-5">
+            <h3 className="font-bold text-gray-900 mb-3 text-sm">&#x1F3AF; A travailler</h3>
+            {(lastQuiz?.results?.pointsVigilance?.length ?? 0) > 0 ? (
+              <ul className="space-y-2">
+                {lastQuiz!.results!.pointsVigilance!.slice(0, 5).map((p, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                    <span className="text-amber-500 flex-shrink-0">&#x2192;</span> {p}
+                  </li>
+                ))}
+              </ul>
+            ) : weakDimensions.length > 0 ? (
+              <ul className="space-y-2">
+                {weakDimensions.map(d => (
+                  <li key={d.dimension} className="flex items-start gap-2 text-sm text-gray-700">
+                    <span className="text-amber-500 flex-shrink-0">&#x2192;</span> {d.label} ({d.score}%)
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-gray-400">Aucun point de vigilance majeur detecte. &#x1F44F;</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* PROCHAINES ETAPES */}
       <div className="card p-6">

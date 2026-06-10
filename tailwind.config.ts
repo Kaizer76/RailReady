@@ -9,17 +9,38 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // ============================================================
+        // THÈME ROUGE FERROVIAIRE — primary #c62828 / dark #8e0000
+        // La palette `blue` est volontairement remappée vers le rouge :
+        // toute l'app (btn-primary, liens, badges...) bascule au rouge
+        // sans modifier chaque composant. Rouge doux, non agressif.
+        // ============================================================
+        blue: {
+          50:  '#fdf4f4',
+          100: '#fae6e6',
+          200: '#f3c9c9',
+          300: '#e9a3a3',
+          400: '#dc6f6f',
+          500: '#d04848',
+          600: '#c62828',  // --primary
+          700: '#c62828',  // --primary (boutons)
+          800: '#8e0000',  // --primary-dark (hover)
+          900: '#6d0a0a',
+        },
         rail: {
-          50:  '#f0f4ff',
-          100: '#e0eaff',
-          200: '#c7d7fe',
-          300: '#a5bbfd',
-          400: '#8093fa',
-          500: '#6366f1',
-          600: '#1e3a8a',  // bleu ferroviaire profond
-          700: '#1e3070',
-          800: '#172554',
-          900: '#0f172a',
+          50:  '#fdf4f4',
+          100: '#fae6e6',
+          200: '#f3c9c9',
+          300: '#e9a3a3',
+          400: '#dc6f6f',
+          500: '#d04848',
+          600: '#c62828',  // rouge ferroviaire
+          700: '#a51d1d',
+          800: '#8e0000',
+          900: '#6d0a0a',
+        },
+        secondary: {
+          DEFAULT: '#1f2937',
         },
         accent: {
           400: '#fb923c',

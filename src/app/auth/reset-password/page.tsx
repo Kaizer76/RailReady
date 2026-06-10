@@ -13,15 +13,40 @@ export default function ResetPasswordPage() {
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    // Vérifie qu'on a une session valide (lien de reset)
+    // Vérifie qu'on a une session valide (lien de reset).
+    // On écoute aussi onAuthStateChange : la session peut arriver de façon
+    // asynchrone (event PASSWORD_RECOVERY / SIGNED_IN) juste après le montage.
     const supabase = createClient()
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
+    let resolved = false
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('[ResetPassword] auth event:', event, 'session:', !!session)
+      if (session && !resolved) {
+        resolved = true
         setReady(true)
-      } else {
-        setStatus('expired')
       }
     })
+
+    supabase.auth.getSession().then(({ data }) => {
+      console.log('[ResetPassword] initial getSession:', !!data.session)
+      if (data.session && !resolved) {
+        resolved = true
+        setReady(true)
+      }
+    })
+
+    // Délai de grâce de 2,5 s avant de déclarer le lien expiré
+    const timeout = setTimeout(() => {
+      if (!resolved) {
+        console.warn('[ResetPassword] no session after grace period → expired')
+        setStatus('expired')
+      }
+    }, 2500)
+
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timeout)
+    }
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {

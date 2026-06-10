@@ -1,8 +1,11 @@
 // ============================================================
 // RAILREADY — Données complètes des métiers ferroviaires
 // Source : informations publiques reformulées + expertise terrain
-// ⚠️ ZONES MARQUÉES [À VALIDER] = vérification fondateur requise
 // ============================================================
+
+// Disclaimer unique — affiché une seule fois par fiche métier
+export const DISCLAIMER_METIER =
+  'Les informations sont fournies à titre indicatif et peuvent évoluer selon les opérateurs ferroviaires.'
 
 export interface FicheMetier {
   slug: string
@@ -12,7 +15,7 @@ export interface FicheMetier {
   accroche: string
   description: string
   missions: string[]
-  journee_type: JourneeType
+  exemple_missions: string[]
   horaires: HorairesInfo
   avantages: string[]
   contraintes: string[]
@@ -28,18 +31,11 @@ export interface FicheMetier {
   profil_ideal: ProfilDimension
 }
 
-interface JourneeType {
-  intro: string
-  etapes: { heure: string; description: string }[]
-  note: string
-}
-
 interface HorairesInfo {
   type: string
   details: string
   roulement: string
   astreintes: boolean
-  note_validation?: string
 }
 
 interface QualiteRequise {
@@ -56,9 +52,6 @@ interface IdeReçue {
 interface SalaireInfo {
   brut_debutant: string
   brut_experimente: string
-  primes: string[]
-  avantages_nature: string[]
-  note_validation: string
 }
 
 interface FormationInfo {
@@ -66,7 +59,6 @@ interface FormationInfo {
   duree: string
   lieu: string
   contenu_general: string[]
-  note: string
 }
 
 interface ProfilDimension {
@@ -103,35 +95,28 @@ const conducteurDeTrain: FicheMetier = {
     'Respecter les temps de repos réglementaires entre les prises de service',
   ],
 
-  journee_type: {
-    intro: 'Il n\'existe pas de journée "type" en conduite — c\'est précisément ce qui définit le métier. Voici un exemple de prise de service en roulement TER.',
-    etapes: [
-      { heure: '04h45', description: 'Prise de service au technicentre. Consultation de la feuille de route, vérification des documents de bord.' },
-      { heure: '05h00', description: 'Visite de l\'engin : tour extérieur, vérification des niveaux, test des équipements de sécurité.' },
-      { heure: '05h30', description: 'Mise en voie. Contact radio avec le régulateur. Départ à l\'heure.' },
-      { heure: '05h30 → 09h15', description: 'Conduite sur 3 allers-retours de navette régionale. Gestion d\'un signal d\'alerte franchissement à vitesse réduite.' },
-      { heure: '09h30', description: 'Pause réglementaire dans une gare intermédiaire. Repas froid apporté de chez soi.' },
-      { heure: '10h00', description: 'Reprise pour un dernier aller. Voyageur malaise à bord → coordination avec le chef de bord et arrêt en gare.' },
-      { heure: '12h15', description: 'Remise de l\'engin au technicentre. Compte rendu d\'incident. Fin de service.' },
-    ],
-    note: '⚠️ [À VALIDER] Les horaires et séquences varient fortement selon le type de traction (TGV, TER, fret), la taille du dépôt et le roulement attribué.',
-  },
+  exemple_missions: [
+    'Prise de service : consultation de la feuille de route et des documents de bord',
+    'Préparation et vérification de l\'engin de traction (tour extérieur, équipements de sécurité)',
+    'Mise en voie et communication avec le régulateur avant le départ',
+    'Conduite en respectant la signalisation et les vitesses réglementaires',
+    'Surveillance permanente de la sécurité et adaptation aux conditions de circulation',
+    'Gestion des incidents en lien avec le chef de bord et le poste de commandement',
+    'Clôture du service : remise de l\'engin et rédaction du compte rendu',
+  ],
 
   horaires: {
     type: 'Roulement posté',
     details: 'Nuits, week-ends et jours fériés font partie intégrante du métier. Le conducteur travaille en moyenne 5 jours sur 7 mais jamais aux mêmes heures. Les repos compensatoires sont prévus par convention collective.',
     roulement: 'Alternance de prises de service le matin, l\'après-midi et la nuit. Les roulements sont généralement établis plusieurs semaines à l\'avance.',
     astreintes: false,
-    note_validation: '⚠️ [À VALIDER] La fréquence des nuits et les conditions de repos varient selon les accords locaux et le type de service (voyageurs vs fret).',
   },
 
   avantages: [
     'Emploi stable, CDI quasi systématique après formation',
     'Autonomie totale en cabine — on est son propre patron pendant le service',
-    'Avantages sociaux significatifs (transport gratuit pour soi et sa famille)',
     'Prime de roulement qui valorise les contraintes horaires',
     'Fierté et reconnaissance sociale du métier',
-    'Retraite anticipée par rapport au régime général',
     'Formation entièrement financée par l\'employeur',
     'Faible pression hiérarchique pendant le service',
   ],
@@ -197,16 +182,12 @@ const conducteurDeTrain: FicheMetier = {
     'Préparez sérieusement les tests psychotechniques — ils ne s\'improvisent pas.',
     'Lors de l\'entretien, montrez que vous avez compris la réalité du roulement, pas juste l\'attrait du métier.',
     'La santé est un capital : une bonne condition physique et psychologique est un atout durable.',
-    '⚠️ [À VALIDER] Les conditions d\'accès et les tests spécifiques peuvent varier selon l\'opérateur (SNCF, Keolis, Transdev).',
   ],
 
 
   salaire: {
     brut_debutant: '1 900 € - 2 200 € brut/mois (hors primes)',
     brut_experimente: '2 800 € - 3 500 € brut/mois (avec primes de roulement)',
-    primes: ['Prime de roulement', 'Prime de nuit', 'Indemnités de repas hors résidence', 'Prime de traction (selon type d\'engin)'],
-    avantages_nature: ['Billet de train gratuit (titulaire + famille)', 'Aide au logement', 'Mutuelle avantageuse', 'Régime de retraite spécifique'],
-    note_validation: '⚠️ [À VALIDER] Les montants indiqués sont des estimations basées sur des sources publiques (juin 2026). Les grilles exactes varient selon l\'opérateur, le type de traction et l\'ancienneté.',
   },
 
   formation: {
@@ -220,7 +201,6 @@ const conducteurDeTrain: FicheMetier = {
       'Conduite accompagnée puis autonome',
       'Gestion des situations anormales (cadre général)',
     ],
-    note: '⚠️ [À VALIDER] La structure et la durée exacte de la formation varient selon l\'opérateur. RailReady ne reproduit pas le contenu des formations officielles.',
   },
 
   metiers_proches: ['agent-circulation', 'technicien-maintenance', 'controleur-asct'],
@@ -260,25 +240,21 @@ const agentCirculation: FicheMetier = {
     'Alerter la hiérarchie en cas de situation dégradée',
   ],
 
-  journee_type: {
-    intro: 'Une journée type en poste d\'aiguillage — poste de taille intermédiaire sur une ligne régionale.',
-    etapes: [
-      { heure: '06h00', description: 'Prise de poste. Passation avec l\'équipe de nuit : situation du trafic, incidents en cours, travaux prévus.' },
-      { heure: '06h15', description: 'Début de la période de pointe matinale. Gestion intensive des circulations : trains de navette, trains longue distance, mouvements de matériel.' },
-      { heure: '08h30', description: 'Incident : une aiguille défaillante bloque un itinéraire. Coordination avec la maintenance, communication aux conducteurs impactés, gestion des retards en cascade.' },
-      { heure: '09h45', description: 'Résolution de l\'incident. Reprise normale. Rédaction du compte rendu d\'anomalie.' },
-      { heure: '11h00', description: 'Trafic plus calme. Supervision des travaux de voie sur un canton adjacent. Gestion des circulations en voie unique.' },
-      { heure: '13h00', description: 'Relève de poste. Passation complète à l\'équipe suivante. Fin de service.' },
-    ],
-    note: '⚠️ [À VALIDER] La structure des postes (aiguillage local vs PCC centralisé) varie fortement. Les postes PCC ont un fonctionnement très différent des postes traditionnels.',
-  },
+  exemple_missions: [
+    'Prise de poste : passation avec l\'équipe précédente (situation du trafic, incidents en cours, travaux prévus)',
+    'Gestion des circulations en période de pointe : itinéraires, aiguillages, mouvements de matériel',
+    'Communication opérationnelle permanente avec conducteurs, équipes terrain et direction du trafic',
+    'Surveillance de la sécurité du réseau en temps réel',
+    'Gestion des incidents : coordination maintenance, information des conducteurs, traitement des retards',
+    'Contrôle documentaire : tenue des registres et rédaction des comptes rendus d\'anomalie',
+    'Clôture du service : passation complète à l\'équipe suivante',
+  ],
 
   horaires: {
     type: 'Travail posté 3x8',
     details: 'Le réseau ferroviaire fonctionne 24h/24. L\'agent circulation travaille en rotation matin/après-midi/nuit, y compris les week-ends et jours fériés. Le rythme est exigeant mais prévisible une fois le roulement établi.',
     roulement: 'Roulement sur cycle (exemple : 2 matins, 2 après-midi, 2 nuits, puis repos). Les détails varient selon le poste et les accords locaux.',
     astreintes: false,
-    note_validation: '⚠️ [À VALIDER] Les modalités exactes de roulement varient selon le poste et l\'opérateur.',
   },
 
   avantages: [
@@ -344,16 +320,12 @@ const agentCirculation: FicheMetier = {
     'Montrez en entretien que vous comprenez la notion de sécurité comme valeur non négociable.',
     'La capacité à communiquer de manière claire et concise est testée — entraînez-vous.',
     'Le travail en équipe est fondamental — valorisez vos expériences de coordination.',
-    '⚠️ [À VALIDER] Les conditions d\'accès au poste (concours, tests, niveau requis) peuvent évoluer selon les opérateurs.',
   ],
 
 
   salaire: {
     brut_debutant: '1 900 € - 2 200 € brut/mois (hors primes)',
     brut_experimente: '2 600 € - 3 200 € brut/mois (avec primes de poste)',
-    primes: ['Prime de poste (nuit, dimanche, férié)', 'Prime de sujétion', 'Indemnités de repas'],
-    avantages_nature: ['Transport gratuit', 'Mutuelle', 'Aide logement'],
-    note_validation: '⚠️ [À VALIDER] Montants indicatifs basés sur sources publiques (juin 2026). À vérifier selon l\'opérateur et l\'ancienneté.',
   },
 
   formation: {
@@ -367,7 +339,6 @@ const agentCirculation: FicheMetier = {
       'Gestion des situations perturbées',
       'Communication professionnelle radio',
     ],
-    note: '⚠️ [À VALIDER] RailReady ne reproduit pas le contenu des formations officielles. Les éléments ci-dessus sont des notions générales publiques.',
   },
 
   metiers_proches: ['conducteur-de-train', 'manager-operationnel'],
@@ -408,33 +379,26 @@ const controleurASCT: FicheMetier = {
     'Préparer et transmettre les rapports de service',
   ],
 
-  journee_type: {
-    intro: 'Exemple de service en train régional (TER) — service long avec plusieurs rotations.',
-    etapes: [
-      { heure: '06h30', description: 'Prise de service en gare. Récupération des documents de bord, coordination avec le conducteur.' },
-      { heure: '06h50', description: 'Ouverture des portes et accueil des voyageurs. Annonces de départ.' },
-      { heure: '07h00 → 09h30', description: 'Contrôle systématique dans toutes les voitures. Régularisation de 4 voyageurs sans titre. Gestion d\'une altercation entre passagers.' },
-      { heure: '09h45', description: 'Arrivée terminus. Court battement. Re-départ en sens inverse.' },
-      { heure: '10h00 → 12h15', description: 'Voyage retour. Voyageur malaise → coordination avec conducteur, arrêt non prévu, SAMU contacté.' },
-      { heure: '12h30', description: 'Pause repas en gare. 45 minutes réglementaires.' },
-      { heure: '13h15', description: 'Reprise pour deux nouvelles rotations. Un voyageur agressif refusant de payer — procédure de signalement.' },
-      { heure: '17h00', description: 'Fin de service. Remise de rapport, dépôt des fonds.' },
-    ],
-    note: '⚠️ [À VALIDER] Les services varient énormément selon le type de train (TGV, TER, Intercités), le nombre d\'agents à bord et la politique de l\'opérateur.',
-  },
+  exemple_missions: [
+    'Prise de service : récupération des documents de bord et coordination avec le conducteur',
+    'Accueil des voyageurs, annonces et préparation du départ',
+    'Contrôle documentaire des titres de transport dans l\'ensemble des voitures',
+    'Régularisation des situations irrégulières et vente à bord',
+    'Gestion des incidents : altercations, urgences médicales, coordination avec le conducteur',
+    'Surveillance de la sûreté à bord pendant tout le service',
+    'Clôture du service : remise du rapport et dépôt des fonds',
+  ],
 
   horaires: {
     type: 'Roulement posté',
     details: 'Nuits, week-ends et jours fériés font partie du roulement. Les services peuvent être fractionnés sur la journée avec des coupures.',
     roulement: 'Service linéaire ou en rotation selon les tournées. Les agents peuvent avoir des débuts de service très tôt le matin ou des fins très tardives.',
     astreintes: false,
-    note_validation: '⚠️ [À VALIDER] Les conditions de roulement et les coupures varient selon la convention collective applicable.',
   },
 
   avantages: [
     'Contact humain riche et varié — chaque journée est différente',
     'Autonomie à bord — on gère son service avec peu de supervision directe',
-    'Avantages transport pour soi et sa famille',
     'Sentiment d\'utilité immédiate pour les voyageurs',
     'Postes accessibles sans diplôme bac+5 — la personnalité prime',
   ],
@@ -493,16 +457,12 @@ const controleurASCT: FicheMetier = {
     'Montrez que vous comprenez la notion d\'autorité calme : ni soumission, ni agressivité.',
     'Si vous avez une expérience en service client (commerce, hôtellerie, sécurité), valorisez-la.',
     'La présentation physique et la posture comptent — vous représentez l\'entreprise à bord.',
-    '⚠️ [À VALIDER] Les critères de recrutement et les tests spécifiques varient selon l\'opérateur.',
   ],
 
 
   salaire: {
     brut_debutant: '1 700 € - 1 950 € brut/mois (hors primes)',
     brut_experimente: '2 200 € - 2 800 € brut/mois (avec primes)',
-    primes: ['Prime de dimanche / nuit', 'Prime de sûreté', 'Indemnités de repas hors résidence'],
-    avantages_nature: ['Transport gratuit', 'Mutuelle', 'Aide logement'],
-    note_validation: '⚠️ [À VALIDER] Montants indicatifs (juin 2026). Les grilles varient selon l\'opérateur et la convention collective.',
   },
 
   formation: {
@@ -516,7 +476,6 @@ const controleurASCT: FicheMetier = {
       'Procédures d\'urgence génériques',
       'Communication professionnelle',
     ],
-    note: '⚠️ [À VALIDER] Le contenu et la durée varient selon l\'opérateur. RailReady ne reproduit pas les programmes officiels.',
   },
 
   metiers_proches: ['agent-escale', 'agent-vente'],
@@ -556,34 +515,27 @@ const agentVente: FicheMetier = {
     'Vendre des services additionnels (réservations, abonnements, cartes de fidélité)',
   ],
 
-  journee_type: {
-    intro: 'Une journée type en boutique voyageurs en gare moyenne.',
-    etapes: [
-      { heure: '07h30', description: 'Prise de service. Ouverture de la caisse, vérification des stocks de documents.' },
-      { heure: '08h00', description: 'Ouverture du guichet. Affluence matinale — voyageurs pressés, abonnés, questions rapides.' },
-      { heure: '10h00', description: 'Creux d\'activité. Traitement des réclamations en attente, formation sur un nouvel outil tarifaire.' },
-      { heure: '11h30', description: 'Pic pré-déjeuner. Plusieurs voyageurs demandent des échanges suite à une annulation de train.' },
-      { heure: '12h00', description: 'Pause déjeuner tournante.' },
-      { heure: '13h00', description: 'Reprise. Accompagnement d\'un voyageur étranger ne parlant pas français — gestion avec patience et ressources disponibles.' },
-      { heure: '15h00', description: 'Pic de l\'après-midi. Ventes pour les départs du soir.' },
-      { heure: '17h00', description: 'Clôture de caisse. Remontée des anomalies de la journée. Fin de service.' },
-    ],
-    note: '⚠️ [À VALIDER] Les horaires, le type de poste (guichet, boutique, agence) et les missions varient selon la gare et l\'organisation locale.',
-  },
+  exemple_missions: [
+    'Prise de service : ouverture de la caisse et vérification des documents',
+    'Vente et émission de titres de transport en période d\'affluence',
+    'Traitement des réclamations, échanges et remboursements',
+    'Gestion des pics d\'activité lors des perturbations (annulations, retards)',
+    'Accompagnement des voyageurs en difficulté (langue, mobilité, situations complexes)',
+    'Communication opérationnelle avec les équipes de la gare',
+    'Clôture du service : arrêté de caisse et remontée des anomalies',
+  ],
 
   horaires: {
     type: 'Horaires décalés — amplitude gare',
     details: 'Les gares fonctionnent de très tôt le matin à tard le soir. Les agents de vente travaillent en rotation matin/après-midi/soirée. Les week-ends et certains jours fériés sont travaillés.',
     roulement: 'Rotation hebdomadaire selon planning. Peu ou pas de nuits complètes selon le type de poste.',
     astreintes: false,
-    note_validation: '⚠️ [À VALIDER] Les amplitudes horaires varient beaucoup selon la taille de la gare et son activité.',
   },
 
   avantages: [
     'Métier de contact humain avec une diversité de profils de voyageurs',
     'Travail en équipe avec une ambiance souvent solidaire',
     'Horaires plus prévisibles que les métiers de conduite ou de circulation',
-    'Avantages transport entreprise',
     'Formation aux outils de vente et à la relation client',
   ],
 
@@ -631,16 +583,12 @@ const agentVente: FicheMetier = {
     'Valorisez toute expérience de vente, de caisse ou de service client — même hors ferroviaire.',
     'Montrez que vous savez gérer des situations conflictuelles avec calme.',
     'Soyez à l\'aise avec les outils numériques — les systèmes de vente sont informatisés.',
-    '⚠️ [À VALIDER] Les conditions de recrutement et les formations associées varient selon l\'opérateur.',
   ],
 
 
   salaire: {
     brut_debutant: '1 650 € - 1 900 € brut/mois',
     brut_experimente: '2 000 € - 2 500 € brut/mois',
-    primes: ['Prime d\'objectifs commerciaux', 'Prime de week-end', 'Indemnités de repas'],
-    avantages_nature: ['Transport gratuit', 'Mutuelle', 'Aide logement'],
-    note_validation: '⚠️ [À VALIDER] Montants indicatifs (juin 2026). Variable selon l\'opérateur.',
   },
 
   formation: {
@@ -653,7 +601,6 @@ const agentVente: FicheMetier = {
       'Relation client et gestion des réclamations',
       'Procédures de caisse',
     ],
-    note: '⚠️ [À VALIDER] Les formations varient selon l\'opérateur.',
   },
 
   metiers_proches: ['agent-escale', 'controleur-asct'],
@@ -698,25 +645,21 @@ Dans de nombreuses gares de taille intermédiaire, le poste est polycompétent :
     'Participer à la gestion des situations de crise et coordonner avec les services compétents',
   ],
 
-  journee_type: {
-    intro: 'Exemple d\'une journée en gare de taille intermédiaire, service du matin.',
-    etapes: [
-      { heure: '05h30', description: 'Prise de service. Ouverture de la gare. Vérification des affichages et du bon fonctionnement des équipements.' },
-      { heure: '06h00', description: 'Premier train. Coordination avec le conducteur, ouverture des portes, assistance PMR préalablement réservée.' },
-      { heure: '06h30 → 09h00', description: 'Pic de la matinée : succession de trains, voyageurs pressés, annonces en cas de retard, gestion d\'une correspondance manquée.' },
-      { heure: '09h30', description: 'Période plus calme. Traitement des situations en suspens. Formation d\'un nouveau collègue sur la procédure PMR.' },
-      { heure: '11h00', description: 'Incident : train supprimé. Information des voyageurs sur les alternatives, coordination avec la salle de gestion du trafic.' },
-      { heure: '13h00', description: 'Relève. Passation au collègue de l\'après-midi. Fin de service.' },
-    ],
-    note: '⚠️ [À VALIDER] L\'organisation varie fortement selon la taille de la gare (petite halte vs grande gare), l\'effectif disponible et les missions attribuées.',
-  },
+  exemple_missions: [
+    'Prise de service : ouverture de la gare, vérification des affichages et des équipements',
+    'Préparation des départs : coordination avec les conducteurs et chefs de bord',
+    'Assistance aux personnes à mobilité réduite (PMR) et aux groupes',
+    'Communication opérationnelle : annonces, information voyageurs en temps réel',
+    'Surveillance de la sécurité sur les quais pendant les pics de trafic',
+    'Gestion des incidents : trains supprimés, correspondances manquées, coordination avec le trafic',
+    'Clôture du service : passation à l\'équipe suivante',
+  ],
 
   horaires: {
     type: 'Travail posté 2x8 ou 3x8, 7 jours sur 7',
     details: 'Les gares fonctionnent du premier au dernier train. Les agents d\'escale travaillent en tableau de service, incluant les week-ends et jours fériés. Le port de la tenue commerciale complète (tenue NOMAD chez certains opérateurs) est obligatoire, avec badge nominatif.',
-    roulement: 'Roulement en 2x8 ou 3x8 selon la gare. Le dimanche et les jours fériés font partie du roulement standard. ⚠️ [À VALIDER] La fréquence exacte varie selon la taille de la gare.',
+    roulement: 'Roulement en 2x8 ou 3x8 selon la gare. Le dimanche et les jours fériés font partie du roulement standard.',
     astreintes: false,
-    note_validation: '⚠️ [À VALIDER] L\'amplitude horaire, le roulement exact et les conditions spécifiques varient selon la gare et l\'opérateur.',
   },
 
   avantages: [
@@ -724,7 +667,6 @@ Dans de nombreuses gares de taille intermédiaire, le poste est polycompétent :
     'Diversité réelle des missions au quotidien (quai, vente, PMR, sûreté)',
     'Sentiment d\'utilité fort, notamment dans l\'accompagnement des personnes vulnérables',
     'Travail en équipe avec une vraie solidarité de corps de métier',
-    'Avantages transport pour soi et sa famille',
     'Polyvalence qui développe une vraie expertise multi-métiers',
   ],
 
@@ -775,16 +717,12 @@ Dans de nombreuses gares de taille intermédiaire, le poste est polycompétent :
     'Montrez que vous êtes à l\'aise avec les outils numériques — les agents utilisent des applications métier pour la saisie des présences, les informations voyageurs et la gestion des PMR.',
     'Préparez des exemples concrets de situations difficiles gérées calmement — les recruteurs cherchent spécifiquement ça.',
     'La prise en charge des PMR (personnes à mobilité réduite) est une mission centrale et réglementée — renseignez-vous sur ce qu\'elle implique concrètement.',
-    '⚠️ [À VALIDER] Les missions exactes, les outils et les compétences prioritaires varient selon la taille de la gare et l\'opérateur.',
   ],
 
 
   salaire: {
     brut_debutant: '1 650 € - 1 900 € brut/mois',
     brut_experimente: '2 000 € - 2 500 € brut/mois',
-    primes: ['Prime de dimanche / férié', 'Prime de poste', 'Indemnités de repas'],
-    avantages_nature: ['Transport gratuit', 'Mutuelle'],
-    note_validation: '⚠️ [À VALIDER] Montants indicatifs (juin 2026).',
   },
 
   formation: {
@@ -797,7 +735,6 @@ Dans de nombreuses gares de taille intermédiaire, le poste est polycompétent :
       'Assistance PMR',
       'Communication professionnelle',
     ],
-    note: '⚠️ [À VALIDER] Contenu variable selon l\'opérateur.',
   },
 
   metiers_proches: ['agent-vente', 'controleur-asct'],
@@ -837,26 +774,21 @@ const technicienMaintenance: FicheMetier = {
     'Participer aux astreintes en cas d\'incident grave',
   ],
 
-  journee_type: {
-    intro: 'Exemple d\'une prise de service de nuit dans un technicentre.',
-    etapes: [
-      { heure: '21h00', description: 'Prise de service. Réunion d\'équipe : attribution des rames à traiter, état des travaux en cours, consignes de sécurité.' },
-      { heure: '21h30', description: 'Réception de la première rame rentrée de service. Visite systématique selon le tableau de bord des maintenances dues.' },
-      { heure: '23h00', description: 'Diagnostic d\'une anomalie signalée par le conducteur : vibration anormale sur un bogie. Tests, mesures, consultation du dossier technique.' },
-      { heure: '01h00', description: 'Intervention corrective. Travail en binôme sous la rame, positions contraintes, bruit et éclairage artificiel.' },
-      { heure: '03h30', description: 'Contrôle final de conformité. Validation dans la GMAO. La rame est libérée pour le service du lendemain matin.' },
-      { heure: '04h30', description: 'Traitement d\'une seconde rame selon le planning préventif. Pas d\'anomalie détectée.' },
-      { heure: '06h00', description: 'Fin de service. Passation à l\'équipe du matin. Rapport de nuit.' },
-    ],
-    note: '⚠️ [À VALIDER] Les horaires et l\'organisation varient selon le type de matériel (TGV, TER, fret) et le technicentre.',
-  },
+  exemple_missions: [
+    'Prise de service : réunion d\'équipe, attribution des rames et consignes de sécurité',
+    'Réception et visite systématique des rames selon le plan de maintenance',
+    'Diagnostic des anomalies signalées : tests, mesures, consultation des dossiers techniques',
+    'Interventions correctives en binôme dans le respect des procédures',
+    'Contrôle documentaire : validation de conformité et traçabilité dans la GMAO',
+    'Surveillance de la sécurité à chaque étape de l\'intervention',
+    'Clôture du service : passation à l\'équipe suivante et rapport d\'intervention',
+  ],
 
   horaires: {
     type: 'Travail posté — prédominance des nuits',
     details: 'La maintenance se fait principalement hors période de trafic. Les nuits sont fréquentes, les week-ends aussi. Des astreintes peuvent exister selon le poste.',
     roulement: 'Roulement 2x8 ou 3x8 selon le technicentre. Les nuits représentent souvent une part importante du planning.',
     astreintes: true,
-    note_validation: '⚠️ [À VALIDER] L\'organisation précise varie selon le site et les conventions collectives.',
   },
 
   avantages: [
@@ -915,16 +847,12 @@ const technicienMaintenance: FicheMetier = {
     'Avoir un CAP/BEP ou BTS dans un domaine technique est un vrai atout.',
     'Mettez en avant votre rapport à la rigueur et à la sécurité — ce sont les valeurs centrales.',
     'Si vous avez fait de la maintenance dans un autre secteur, valorisez-le fortement.',
-    '⚠️ [À VALIDER] Les niveaux de qualification exigés varient selon le poste et l\'opérateur.',
   ],
 
 
   salaire: {
     brut_debutant: '1 900 € - 2 200 € brut/mois (hors primes)',
     brut_experimente: '2 500 € - 3 500 € brut/mois (avec primes de nuit)',
-    primes: ['Prime de nuit (majoration significative)', 'Prime d\'astreinte', 'Prime de dimanche / férié'],
-    avantages_nature: ['Transport gratuit', 'Mutuelle', 'Équipements de protection fournis'],
-    note_validation: '⚠️ [À VALIDER] Montants indicatifs (juin 2026). Les primes de nuit peuvent représenter 20-40% du salaire brut.',
   },
 
   formation: {
@@ -937,7 +865,6 @@ const technicienMaintenance: FicheMetier = {
       'Sécurité en environnement ferroviaire',
       'Utilisation des outils de GMAO',
     ],
-    note: '⚠️ [À VALIDER] RailReady n\'enseigne pas les procédures techniques internes. Ce contenu est indicatif.',
   },
 
   metiers_proches: ['technicien-voie-signalisation'],
@@ -977,26 +904,21 @@ const technicienVoieSignalisation: FicheMetier = {
     'Participer aux chantiers de renouvellement de voie',
   ],
 
-  journee_type: {
-    intro: 'Exemple d\'une nuit de travaux sur voie — plage horaire 22h-05h (hors trafic).',
-    etapes: [
-      { heure: '21h30', description: 'Réunion de sécurité avant travaux. Attribution des postes, vérification des équipements de protection (gilets, lampes). Consignation électrique vérifiée.' },
-      { heure: '22h00', description: 'Début de la plage travaux. Accès à la voie après autorisation du régulateur. Mise en place des protections.' },
-      { heure: '22h15 → 01h30', description: 'Interventions planifiées : remplacement de traverses défectueuses, resserrage de fixations, mesures géométriques.' },
-      { heure: '01h30', description: 'Incident : aiguille défaillante sur un appareil de voie adjacent. Intervention d\'urgence pour remise en état avant reprise du trafic.' },
-      { heure: '03h30', description: 'Fin des travaux. Vérification de la remise en configuration normale de la voie. Levée des protections.' },
-      { heure: '04h00', description: 'Restitution de la voie au régulateur. Rédaction du rapport d\'intervention. Retour base.' },
-      { heure: '05h00', description: 'Fin de service.' },
-    ],
-    note: '⚠️ [À VALIDER] Les horaires et l\'organisation des plages travaux varient selon les lignes, les régions et les types d\'interventions.',
-  },
+  exemple_missions: [
+    'Prise de service : réunion de sécurité, attribution des postes, vérification des équipements de protection',
+    'Préparation du chantier : autorisation du régulateur, mise en place des protections',
+    'Interventions planifiées : remplacement de traverses, resserrage de fixations, mesures géométriques',
+    'Gestion des incidents : interventions d\'urgence sur appareils de voie défaillants',
+    'Surveillance de la sécurité du chantier pendant toute la plage travaux',
+    'Contrôle documentaire : vérification de la remise en configuration normale de la voie',
+    'Clôture du service : restitution de la voie au régulateur et rapport d\'intervention',
+  ],
 
   horaires: {
     type: 'Prédominance des nuits et week-ends',
     details: 'Les interventions sur voie se font principalement la nuit et le week-end quand le trafic est réduit ou interrompu. Ce rythme est une contrainte forte du métier.',
     roulement: 'Alternance de semaines de nuit et de jours selon les chantiers. Astreintes fréquentes pour les urgences d\'infrastructure.',
     astreintes: true,
-    note_validation: '⚠️ [À VALIDER] Le rythme exact varie selon la zone géographique, le type de ligne et l\'organisation locale.',
   },
 
   avantages: [
@@ -1052,16 +974,12 @@ const technicienVoieSignalisation: FicheMetier = {
     'Valorisez toute expérience de travaux en extérieur, en hauteur ou en conditions difficiles.',
     'Montrez que vous avez une vraie culture de la sécurité — donnez des exemples concrets.',
     'Si vous avez travaillé en BTP, travaux publics ou industrie, c\'est directement transférable.',
-    '⚠️ [À VALIDER] Les conditions d\'accès et les habilitations requises varient selon les postes et les lignes.',
   ],
 
 
   salaire: {
     brut_debutant: '1 900 € - 2 200 € brut/mois (hors primes)',
     brut_experimente: '2 500 € - 3 200 € brut/mois (avec primes)',
-    primes: ['Prime de nuit', 'Prime d\'astreinte', 'Prime de salissure', 'Prime de dimanche / férié'],
-    avantages_nature: ['Transport gratuit', 'Mutuelle', 'Équipements fournis'],
-    note_validation: '⚠️ [À VALIDER] Montants indicatifs (juin 2026).',
   },
 
   formation: {
@@ -1074,7 +992,6 @@ const technicienVoieSignalisation: FicheMetier = {
       'Outillage et équipements de mesure',
       'Notions de signalisation (principes publics)',
     ],
-    note: '⚠️ [À VALIDER] RailReady n\'enseigne pas les procédures internes. Contenu indicatif uniquement.',
   },
 
   metiers_proches: ['technicien-maintenance'],

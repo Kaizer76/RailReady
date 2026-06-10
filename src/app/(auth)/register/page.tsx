@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { getSiteURL } from '@/lib/utils/site-url'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -28,13 +29,16 @@ export default function RegisterPage() {
     }
 
     const supabase = createClient()
-    // emailRedirectTo : Supabase envoie un lien vers /callback (PKCE flow)
+    // emailRedirectTo : URL absolue vers /callback — getSiteURL() garantit
+    // qu'aucun lien localhost n'est généré en production
+    const redirectTo = `${getSiteURL()}/callback`
+    console.log('[Register] signUp emailRedirectTo =', redirectTo)
     const { error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
         data: { prenom: form.prenom, full_name: form.prenom },
-        emailRedirectTo: `${window.location.origin}/callback`,
+        emailRedirectTo: redirectTo,
       },
     })
 

@@ -1,507 +1,553 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+// ============================================================
+// RAILREADY — Module psychotechnique V2
+// Vrais exercices interactifs : sessions structurées, chronomètre,
+// score calculé, sauvegarde Supabase (psycho_sessions), bilan complet.
+// ============================================================
+
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
-
-const MODULES = [
-  {
-    id: 'memoire',
-    icon: '🧩',
-    label: 'Mémorisation',
-    description: 'Mémorisez des séquences de chiffres, de lettres ou de formes.',
-    niveaux: 3,
-    color: 'bg-blue-50 border-blue-200',
-    accent: 'text-blue-700',
-    btnColor: 'bg-blue-700 hover:bg-blue-800',
-  },
-  {
-    id: 'logique',
-    icon: '🔢',
-    label: 'Suites logiques',
-    description: 'Trouvez le prochain élément dans une suite numérique ou alphabétique.',
-    niveaux: 3,
-    color: 'bg-purple-50 border-purple-200',
-    accent: 'text-purple-700',
-    btnColor: 'bg-purple-700 hover:bg-purple-800',
-  },
-  {
-    id: 'concentration',
-    icon: '🎯',
-    label: 'Concentration',
-    description: 'Repérez les différences et les erreurs dans une grille de symboles.',
-    niveaux: 3,
-    color: 'bg-green-50 border-green-200',
-    accent: 'text-green-700',
-    btnColor: 'bg-green-700 hover:bg-green-800',
-  },
-  {
-    id: 'rapidite',
-    icon: '⚡',
-    label: 'Rapidité',
-    description: 'Répondez le plus vite possible à des questions simples.',
-    niveaux: 3,
-    color: 'bg-orange-50 border-orange-200',
-    accent: 'text-orange-700',
-    btnColor: 'bg-orange-600 hover:bg-orange-700',
-  },
-]
-
-export default function PsychotechniquePage() {
-  const [activeModule, setActiveModule] = useState<string | null>(null)
-  const [niveau, setNiveau] = useState(1)
-
-  if (activeModule) {
-    return (
-      <ExerciceModule
-        moduleId={activeModule}
-        niveau={niveau}
-        onBack={() => setActiveModule(null)}
-      />
-    )
-  }
-
-  return (
-    <div className="max-w-3xl mx-auto px-4 py-8 pb-24 lg:pb-8 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Entraînement psychotechnique</h1>
-        <p className="text-gray-500 mt-1 text-sm">
-          Préparez-vous aux tests de sélection ferroviaire. 4 modules · 3 niveaux chacun.
-        </p>
-      </div>
-
-      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-800">
-        <strong>Note RailReady :</strong> Ces exercices sont inspirés des typologies de tests psychotechniques
-        rencontrés en recrutement ferroviaire. Ils ne reproduisent pas les sujets réels ou confidentiels
-        des opérateurs.
-      </div>
-
-      <div className="grid sm:grid-cols-2 gap-4">
-        {MODULES.map(mod => (
-          <div key={mod.id} className={`rounded-2xl border p-5 ${mod.color}`}>
-            <div className="flex items-center gap-3 mb-3">
-              <span className="text-3xl">{mod.icon}</span>
-              <div>
-                <h3 className={`font-bold ${mod.accent}`}>{mod.label}</h3>
-                <div className="flex gap-1 mt-1">
-                  {[1, 2, 3].map(n => (
-                    <span
-                      key={n}
-                      className={`w-2 h-2 rounded-full ${
-                        n <= mod.niveaux ? mod.accent.replace('text-', 'bg-') : 'bg-gray-200'
-                      } opacity-60`}
-                    />
-                  ))}
-                  <span className="text-xs text-gray-400 ml-1">{mod.niveaux} niveaux</span>
-                </div>
-              </div>
-            </div>
-            <p className="text-sm text-gray-600 mb-4 leading-relaxed">{mod.description}</p>
-
-            {/* Sélection niveau */}
-            <div className="flex gap-2 mb-4">
-              {[1, 2, 3].map(n => (
-                <button
-                  key={n}
-                  onClick={() => setNiveau(n)}
-                  className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-                    niveau === n
-                      ? `${mod.btnColor} text-white`
-                      : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-300'
-                  }`}
-                >
-                  Niveau {n}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={() => setActiveModule(mod.id)}
-              className={`w-full text-white text-sm font-semibold py-2.5 rounded-xl transition-all ${mod.btnColor}`}
-            >
-              Commencer →
-            </button>
-          </div>
-        ))}
-      </div>
-
-      <div className="card p-5 flex items-center justify-between">
-        <div>
-          <p className="font-semibold text-gray-900 text-sm">Testez-vous en conditions réelles</p>
-          <p className="text-xs text-gray-400 mt-0.5">Simulez un entretien complet avec notre recruteur IA</p>
-        </div>
-        <Link href="/entretien" className="btn-primary text-sm py-2">
-          Entretien IA →
-        </Link>
-      </div>
-    </div>
-  )
-}
-
-// ============================================================
-// COMPOSANT EXERCICE
-// ============================================================
+import { createClient } from '@/lib/supabase/client'
 
 type ModuleId = 'memoire' | 'logique' | 'concentration' | 'rapidite'
 
-function ExerciceModule({
-  moduleId,
-  niveau,
-  onBack,
-}: {
-  moduleId: string
-  niveau: number
-  onBack: () => void
-}) {
-  switch (moduleId as ModuleId) {
-    case 'memoire':
-      return <ExerciceMemoire niveau={niveau} onBack={onBack} />
-    case 'logique':
-      return <ExerciceLogique niveau={niveau} onBack={onBack} />
-    case 'concentration':
-      return <ExerciceConcentration niveau={niveau} onBack={onBack} />
-    case 'rapidite':
-      return <ExerciceRapidite niveau={niveau} onBack={onBack} />
-    default:
-      return null
+const MODULE_ORDER: ModuleId[] = ['memoire', 'logique', 'concentration', 'rapidite']
+
+const MODULE_META: Record<ModuleId, { label: string; icon: string; description: string }> = {
+  memoire: {
+    label: 'Mémoire',
+    icon: '🧩',
+    description: 'Mémorisez une séquence, puis répondez à des questions précises (3e chiffre, dernier chiffre...).',
+  },
+  logique: {
+    label: 'Logique',
+    icon: '🔢',
+    description: 'Suites numériques et alphabétiques chronométrées : 2 4 8 16 ? · A C E G ? · 1 4 9 16 ?',
+  },
+  concentration: {
+    label: 'Concentration',
+    icon: '🎯',
+    description: 'Grilles d\'observation chronométrées : trouvez l\'intrus parmi des symboles quasi identiques.',
+  },
+  rapidite: {
+    label: 'Rapidité',
+    icon: '⚡',
+    description: '20 questions contre la montre : calcul mental et reconnaissance rapide.',
+  },
+}
+
+// ── Helpers ─────────────────────────────────────────────────────
+function randInt(max: number): number {
+  return Math.floor(Math.random() * max)
+}
+
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = randInt(i + 1)
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
+function ordinal(n: number): string {
+  return n === 1 ? '1er' : `${n}e`
+}
+
+interface Question {
+  prompt: string
+  options: string[]
+  answer: string
+  display?: string[] // séquence à afficher (logique)
+}
+
+// ── Générateurs — MÉMOIRE ───────────────────────────────────────
+const LETTERS = 'BCDFGHJKLMNPRSTVZ'.split('')
+
+function generateMemorySequence(niveau: number): string[] {
+  if (niveau === 1) return Array.from({ length: 5 }, () => String(randInt(10)))
+  if (niveau === 2) return Array.from({ length: 7 }, () => String(randInt(10)))
+  // Niveau 3 : séquence complexe chiffres + lettres
+  return Array.from({ length: 8 }, () =>
+    Math.random() < 0.5 ? String(randInt(10)) : LETTERS[randInt(LETTERS.length)]
+  )
+}
+
+function memoryQuestionsFor(seq: string[]): Question[] {
+  const len = seq.length
+  const positions = shuffle(Array.from({ length: len }, (_, i) => i))
+  const alphabet = Array.from(new Set([...seq, ...Array.from({ length: 10 }, (_, i) => String(i))]))
+  const qs: Question[] = []
+
+  // Question 1 : le dernier élément
+  qs.push(makeMemoryQ('Quel était le dernier élément ?', seq[len - 1], alphabet))
+  // Question 2 : le premier élément
+  qs.push(makeMemoryQ('Quel était le premier élément ?', seq[0], alphabet))
+  // Question 3 : une position au hasard (ni premier ni dernier)
+  const mid = positions.find(p => p !== 0 && p !== len - 1) ?? 1
+  qs.push(makeMemoryQ(`Quel était le ${ordinal(mid + 1)} élément ?`, seq[mid], alphabet))
+  return qs
+}
+
+function makeMemoryQ(prompt: string, answer: string, alphabet: string[]): Question {
+  const wrong = shuffle(alphabet.filter(c => c !== answer)).slice(0, 3)
+  return { prompt, options: shuffle([answer, ...wrong]), answer }
+}
+
+// ── Générateurs — LOGIQUE ───────────────────────────────────────
+function generateLogicQuestion(niveau: number): Question {
+  const pools: string[][] = [
+    ['arithmetic', 'letters'],
+    ['arithmetic', 'geometric', 'letters', 'squares'],
+    ['geometric', 'squares', 'fibonacci', 'alternating', 'letters2'],
+  ]
+  const types = pools[niveau - 1]
+  const type = types[randInt(types.length)]
+  const start = randInt(5) + 1
+
+  let seq: (number | string)[] = []
+  let answer: number | string = 0
+
+  if (type === 'arithmetic') {
+    const step = randInt(5) + 2
+    seq = [start, start + step, start + step * 2, start + step * 3]
+    answer = start + step * 4
+  } else if (type === 'geometric') {
+    const ratio = randInt(2) + 2
+    seq = [start, start * ratio, start * ratio ** 2, start * ratio ** 3]
+    answer = start * ratio ** 4
+  } else if (type === 'squares') {
+    const offset = randInt(3) + 1
+    seq = [offset ** 2, (offset + 1) ** 2, (offset + 2) ** 2, (offset + 3) ** 2]
+    answer = (offset + 4) ** 2
+  } else if (type === 'fibonacci') {
+    const a = randInt(3) + 1
+    const b = a + randInt(2) + 1
+    const s = [a, b, a + b, a + 2 * b, 2 * a + 3 * b]
+    seq = s
+    answer = 3 * a + 5 * b
+  } else if (type === 'alternating') {
+    const plus = randInt(4) + 3
+    const minus = randInt(2) + 1
+    const s0 = randInt(5) + 5
+    seq = [s0, s0 + plus, s0 + plus - minus, s0 + 2 * plus - minus, s0 + 2 * plus - 2 * minus]
+    answer = s0 + 3 * plus - 2 * minus
+  } else {
+    // letters : A C E G ? (pas) — letters2 : pas variable
+    const stepL = type === 'letters2' ? randInt(2) + 2 : 2
+    const startCode = 65 + randInt(6)
+    seq = Array.from({ length: 4 }, (_, i) => String.fromCharCode(startCode + i * stepL))
+    answer = String.fromCharCode(startCode + 4 * stepL)
+  }
+
+  let wrong: (number | string)[]
+  if (typeof answer === 'number') {
+    const deltas = shuffle([1, 2, 3, 4, 5, 6]).slice(0, 3)
+    wrong = deltas.map((d, i) => (i % 2 === 0 ? answer as number + d : Math.max(0, (answer as number) - d)))
+    wrong = Array.from(new Set(wrong)).filter(w => w !== answer).slice(0, 3)
+    while (wrong.length < 3) wrong.push((answer as number) + 7 + wrong.length)
+  } else {
+    const code = (answer as string).charCodeAt(0)
+    wrong = [1, 2, 3].map(d => String.fromCharCode(((code - 65 + d) % 26) + 65))
+  }
+
+  return {
+    prompt: 'Quel est l\'élément suivant ?',
+    display: seq.map(String),
+    options: shuffle([String(answer), ...wrong.map(String)]),
+    answer: String(answer),
   }
 }
 
-// ============================================================
-// EXERCICE — MÉMORISATION
-// ============================================================
+// ── Générateurs — RAPIDITÉ ──────────────────────────────────────
+function generateSpeedQuestion(niveau: number): Question {
+  const kinds = niveau === 1
+    ? ['add', 'sub', 'parity']
+    : niveau === 2
+    ? ['add', 'sub', 'mul', 'parity', 'compare']
+    : ['add', 'sub', 'mul', 'parity', 'compare', 'mul2']
+  const kind = kinds[randInt(kinds.length)]
+  const a = randInt(niveau === 3 ? 20 : 10) + 1
+  const b = randInt(niveau === 3 ? 20 : 10) + 1
 
-function ExerciceMemoire({ niveau, onBack }: { niveau: number; onBack: () => void }) {
-  const lengths = [4, 6, 8]
-  const seqLen = lengths[niveau - 1]
-  const displayTime = [3, 4, 5][niveau - 1]
-  const [phase, setPhase] = useState<'display' | 'input' | 'result'>('display')
-  const [sequence, setSequence] = useState<number[]>(() =>
-    Array.from({ length: seqLen }, () => Math.floor(Math.random() * 10))
-  )
-  const [answer, setAnswer] = useState('')
-  const [score, setScore] = useState<{ correct: number; total: number } | null>(null)
-  const [countdown, setCountdown] = useState(displayTime)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  // Auto-start au montage : compte à rebours puis passage en phase 'input'
-  useEffect(() => {
-    setCountdown(displayTime)
-    let remaining = displayTime
-    intervalRef.current = setInterval(() => {
-      remaining -= 1
-      setCountdown(remaining)
-      if (remaining <= 0) {
-        clearInterval(intervalRef.current!)
-        setPhase('input')
-      }
-    }, 1000)
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
-  }, [displayTime])
-
-  function check() {
-    const input = answer.replace(/\s/g, '').split('').map(Number)
-    let correct = 0
-    sequence.forEach((n, i) => {
-      if (input[i] === n) correct++
-    })
-    setScore({ correct, total: sequence.length })
-    setPhase('result')
+  if (kind === 'parity') {
+    const n = randInt(50) + 1
+    return { prompt: `${n} est...`, options: shuffle(['Pair', 'Impair']), answer: n % 2 === 0 ? 'Pair' : 'Impair' }
+  }
+  if (kind === 'compare') {
+    const x = randInt(90) + 10
+    let y = randInt(90) + 10
+    if (y === x) y += 1
+    return { prompt: 'Quel est le plus grand ?', options: shuffle([String(x), String(y)]), answer: String(Math.max(x, y)) }
   }
 
-  function restart() {
-    if (intervalRef.current) clearInterval(intervalRef.current)
-    const newSeq = Array.from({ length: seqLen }, () => Math.floor(Math.random() * 10))
-    setSequence(newSeq)
-    setAnswer('')
-    setScore(null)
-    setPhase('display')
-    let remaining = displayTime
-    setCountdown(remaining)
-    intervalRef.current = setInterval(() => {
-      remaining -= 1
-      setCountdown(remaining)
-      if (remaining <= 0) {
-        clearInterval(intervalRef.current!)
-        setPhase('input')
-      }
-    }, 1000)
-  }
+  let answer = 0
+  let prompt = ''
+  if (kind === 'add') { prompt = `${a} + ${b} = ?`; answer = a + b }
+  else if (kind === 'sub') { const [x, y] = [Math.max(a, b), Math.min(a, b)]; prompt = `${x} − ${y} = ?`; answer = x - y }
+  else if (kind === 'mul') { const [x, y] = [Math.min(a, 9), Math.min(b, 9)]; prompt = `${x} × ${y} = ?`; answer = x * y }
+  else { const x = randInt(12) + 3; const y = randInt(8) + 3; prompt = `${x} × ${y} = ?`; answer = x * y }
 
+  const wrongSet = new Set<number>()
+  while (wrongSet.size < 3) {
+    const w = answer + (randInt(9) - 4)
+    if (w !== answer && w >= 0) wrongSet.add(w)
+  }
+  return { prompt, options: shuffle([String(answer), ...Array.from(wrongSet).map(String)]), answer: String(answer) }
+}
+
+// ── Générateurs — CONCENTRATION ─────────────────────────────────
+const INTRUDER_PAIRS: [string, string][] = [
+  ['A', 'Λ'], ['O', 'Q'], ['B', '8'], ['M', 'W'], ['6', '9'],
+  ['E', 'F'], ['Z', '2'], ['S', '5'], ['I', 'l'], ['C', 'G'],
+]
+
+interface GridChallenge {
+  base: string
+  intruder: string
+  cells: string[]
+  intruderIndex: number
+  size: number
+}
+
+function generateGrid(niveau: number): GridChallenge {
+  const size = [5, 6, 7][niveau - 1]
+  const [base, intruder] = INTRUDER_PAIRS[randInt(INTRUDER_PAIRS.length)]
+  const total = size * size
+  const intruderIndex = randInt(total)
+  const cells = Array.from({ length: total }, (_, i) => (i === intruderIndex ? intruder : base))
+  return { base, intruder, cells, intruderIndex, size }
+}
+
+// ── Composants UI génériques ────────────────────────────────────
+function TimerBar({ remaining, total }: { remaining: number; total: number }) {
+  const pct = Math.max(0, (remaining / total) * 100)
+  const danger = pct < 25
   return (
-    <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
-      <button onClick={onBack} className="text-sm text-gray-400 hover:text-gray-700 flex items-center gap-1">
-        ← Retour
-      </button>
-      <div className="text-center">
-        <h2 className="text-xl font-bold text-gray-900">🧩 Mémorisation</h2>
-        <p className="text-sm text-gray-400 mt-1">Niveau {niveau} · {seqLen} chiffres · {displayTime}s d&apos;affichage</p>
+    <div className="space-y-1">
+      <div className="flex justify-between text-xs">
+        <span className="text-gray-400">Temps restant</span>
+        <span className={`font-bold tabular-nums ${danger ? 'text-red-600' : 'text-gray-600'}`}>{remaining}s</span>
       </div>
-
-      <div className="card p-8 text-center min-h-48 flex flex-col items-center justify-center">
-        {phase === 'display' && (
-          <>
-            <p className="text-xs text-gray-400 mb-4">Mémorisez cette séquence :</p>
-            <div className="flex gap-3 justify-center">
-              {sequence.map((n, i) => (
-                <span key={i} className="w-12 h-12 bg-blue-700 text-white rounded-xl flex items-center justify-center text-2xl font-black">
-                  {n}
-                </span>
-              ))}
-            </div>
-            <div className="mt-6 flex flex-col items-center gap-1">
-              <div className={`text-4xl font-black tabular-nums transition-all ${countdown <= 1 ? 'text-red-500 scale-125' : countdown <= 2 ? 'text-amber-500' : 'text-blue-600'}`}>
-                {countdown}
-              </div>
-              <p className="text-xs text-gray-400">seconde{countdown > 1 ? 's' : ''} restante{countdown > 1 ? 's' : ''}</p>
-            </div>
-          </>
-        )}
-        {phase === 'input' && (
-          <>
-            <p className="text-sm font-medium text-gray-700 mb-4">Entrez la séquence mémorisée :</p>
-            <input
-              type="text"
-              className="input text-center text-2xl tracking-widest font-mono max-w-xs"
-              placeholder={'_'.repeat(seqLen)}
-              value={answer}
-              onChange={e => setAnswer(e.target.value)}
-              maxLength={seqLen}
-              autoFocus
-            />
-            <button onClick={check} className="btn-primary mt-4">Valider</button>
-          </>
-        )}
-        {phase === 'result' && score && (
-          <>
-            <div className={`text-6xl font-black mb-2 ${score.correct === score.total ? 'text-green-500' : score.correct > score.total / 2 ? 'text-amber-500' : 'text-red-500'}`}>
-              {score.correct}/{score.total}
-            </div>
-            <p className="text-gray-500 text-sm mb-1">
-              {score.correct === score.total ? 'Parfait !' : score.correct > score.total / 2 ? 'Bien !' : 'À retravailler'}
-            </p>
-            <p className="text-xs text-gray-400 mb-6">Séquence correcte : {sequence.join(' ')}</p>
-            <div className="flex gap-3">
-              <button onClick={restart} className="btn-primary">Nouvel exercice</button>
-              <button onClick={onBack} className="btn-secondary">Retour</button>
-            </div>
-          </>
-        )}
+      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-1000 ease-linear ${danger ? 'bg-red-500' : 'bg-blue-600'}`}
+          style={{ width: `${pct}%` }}
+        />
       </div>
-
     </div>
   )
 }
 
-// ============================================================
-// EXERCICE — SUITES LOGIQUES
-// ============================================================
-
-interface SuiteQuestion {
-  sequence: (number | string)[]
-  reponse: number | string
-  options: (number | string)[]
-  type: string
+function ProgressDots({ current, total }: { current: number; total: number }) {
+  return (
+    <p className="text-xs text-gray-400 font-medium tabular-nums">
+      Question {Math.min(current + 1, total)} / {total}
+    </p>
+  )
 }
 
-function generateSuite(niveau: number): SuiteQuestion {
-  const types = niveau === 1
-    ? ['arithmetic']
-    : niveau === 2
-    ? ['arithmetic', 'geometric']
-    : ['arithmetic', 'geometric', 'fibonacci']
+// ── Runner MCQ générique (logique + rapidité) ───────────────────
+function QuizRunner({
+  title, icon, questions, totalTime, onFinish,
+}: {
+  title: string
+  icon: string
+  questions: Question[]
+  totalTime: number
+  onFinish: (scorePct: number) => void
+}) {
+  const [index, setIndex] = useState(0)
+  const [correct, setCorrect] = useState(0)
+  const [selected, setSelected] = useState<string | null>(null)
+  const [remaining, setRemaining] = useState(totalTime)
+  const correctRef = useRef(0)
+  const finishedRef = useRef(false)
 
-  const type = types[Math.floor(Math.random() * types.length)]
-  const start = Math.floor(Math.random() * 5) + 1
-  const step = Math.floor(Math.random() * 4) + 2
-  let sequence: number[] = []
-  let reponse: number = 0
+  const finish = useCallback((nbCorrect: number) => {
+    if (finishedRef.current) return
+    finishedRef.current = true
+    onFinish(Math.round((nbCorrect / questions.length) * 100))
+  }, [onFinish, questions.length])
 
-  if (type === 'arithmetic') {
-    sequence = [start, start + step, start + step * 2, start + step * 3, start + step * 4]
-    reponse = start + step * 5
-  } else if (type === 'geometric') {
-    const ratio = Math.floor(Math.random() * 2) + 2
-    sequence = [start, start * ratio, start * ratio ** 2, start * ratio ** 3, start * ratio ** 4]
-    reponse = start * ratio ** 5
-  } else {
-    sequence = [1, 1, 2, 3, 5, 8]
-    reponse = 13
-  }
+  // Chronomètre global
+  useEffect(() => {
+    const itv = setInterval(() => {
+      setRemaining(r => {
+        if (r <= 1) {
+          clearInterval(itv)
+          finish(correctRef.current)
+          return 0
+        }
+        return r - 1
+      })
+    }, 1000)
+    return () => clearInterval(itv)
+  }, [finish])
 
-  const shown = sequence.slice(0, 5)
-  const wrongOptions = [
-    reponse + step,
-    reponse - step,
-    reponse + 1,
-  ].filter(n => n !== reponse && n > 0)
-
-  const options = [reponse, ...wrongOptions.slice(0, 3)].sort(() => Math.random() - 0.5)
-
-  return { sequence: shown, reponse, options, type }
-}
-
-function ExerciceLogique({ niveau, onBack }: { niveau: number; onBack: () => void }) {
-  const [question, setQuestion] = useState<SuiteQuestion>(() => generateSuite(niveau))
-  const [selected, setSelected] = useState<number | string | null>(null)
-  const [answered, setAnswered] = useState(false)
-  const [stats, setStats] = useState({ correct: 0, total: 0 })
-
-  function answer(opt: number | string) {
-    if (answered) return
+  function answer(opt: string) {
+    if (selected !== null || finishedRef.current) return
     setSelected(opt)
-    setAnswered(true)
-    setStats(s => ({
-      correct: s.correct + (opt === question.reponse ? 1 : 0),
-      total: s.total + 1,
-    }))
+    const isCorrect = opt === questions[index].answer
+    const newCorrect = correct + (isCorrect ? 1 : 0)
+    setCorrect(newCorrect)
+    correctRef.current = newCorrect
+    setTimeout(() => {
+      if (index + 1 >= questions.length) {
+        finish(newCorrect)
+      } else {
+        setIndex(i => i + 1)
+        setSelected(null)
+      }
+    }, 450)
   }
 
-  function next() {
-    setQuestion(generateSuite(niveau))
-    setSelected(null)
-    setAnswered(false)
-  }
+  const q = questions[index]
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
-      <button onClick={onBack} className="text-sm text-gray-400 hover:text-gray-700 flex items-center gap-1">← Retour</button>
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">🔢 Suites logiques</h2>
-          <p className="text-sm text-gray-400">Niveau {niveau}</p>
-        </div>
-        <div className="text-right">
-          <div className="text-2xl font-black text-blue-700">{stats.correct}/{stats.total}</div>
-          <div className="text-xs text-gray-400">Score</div>
-        </div>
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-gray-900">{icon} {title}</h2>
+        <span className="text-sm font-bold text-blue-700 tabular-nums">{correct} ✓</span>
       </div>
+      <TimerBar remaining={remaining} total={totalTime} />
+      <ProgressDots current={index} total={questions.length} />
 
-      <div className="card p-6">
-        <p className="text-sm text-gray-500 mb-4">Quel nombre vient ensuite dans cette suite ?</p>
-        <div className="flex gap-3 justify-center mb-6 flex-wrap">
-          {question.sequence.map((n, i) => (
-            <span key={i} className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-lg font-bold text-gray-900">
-              {n}
+      <div className="card p-6 text-center">
+        {q.display ? (
+          <div className="flex gap-2.5 justify-center mb-6 flex-wrap">
+            {q.display.map((n, i) => (
+              <span key={i} className="w-11 h-11 bg-gray-100 rounded-xl flex items-center justify-center text-lg font-bold text-gray-900">
+                {n}
+              </span>
+            ))}
+            <span className="w-11 h-11 border-2 border-dashed border-blue-400 rounded-xl flex items-center justify-center text-blue-400 text-xl font-black">
+              ?
             </span>
-          ))}
-          <span className="w-12 h-12 border-2 border-dashed border-blue-400 rounded-xl flex items-center justify-center text-blue-400 text-2xl font-black">
-            ?
-          </span>
-        </div>
+          </div>
+        ) : (
+          <p className="text-2xl font-black text-gray-900 mb-6">{q.prompt}</p>
+        )}
+        {q.display && <p className="text-sm text-gray-500 mb-5">{q.prompt}</p>}
 
-        <div className="grid grid-cols-2 gap-3">
-          {question.options.map((opt, i) => (
+        <div className={`grid gap-3 ${q.options.length === 2 ? 'grid-cols-2' : 'grid-cols-2'}`}>
+          {q.options.map((opt, i) => (
             <button
               key={i}
               onClick={() => answer(opt)}
-              disabled={answered}
-              className={`py-3 rounded-xl text-lg font-bold transition-all ${
-                answered
-                  ? opt === question.reponse
+              disabled={selected !== null}
+              className={`py-3.5 rounded-xl text-lg font-bold transition-all ${
+                selected !== null
+                  ? opt === q.answer
                     ? 'bg-green-100 text-green-700 border-2 border-green-400'
                     : opt === selected
                     ? 'bg-red-100 text-red-700 border-2 border-red-400'
                     : 'bg-gray-50 text-gray-400 border border-gray-200'
-                  : 'bg-gray-50 text-gray-900 border border-gray-200 hover:border-blue-400 hover:bg-blue-50'
+                  : 'bg-gray-50 text-gray-900 border border-gray-200 hover:border-blue-400 hover:bg-blue-50 active:scale-95'
               }`}
             >
               {opt}
             </button>
           ))}
         </div>
-
-        {answered && (
-          <div className="mt-4">
-            <p className={`text-sm font-medium text-center mb-3 ${selected === question.reponse ? 'text-green-700' : 'text-red-600'}`}>
-              {selected === question.reponse ? '✔ Correct !' : `✗ La bonne réponse était ${question.reponse}`}
-            </p>
-            <button onClick={next} className="btn-primary w-full">Suite →</button>
-          </div>
-        )}
       </div>
     </div>
   )
 }
 
-// ============================================================
-// EXERCICE — CONCENTRATION (Grille symboles)
-// ============================================================
+// ── Runner MÉMOIRE ──────────────────────────────────────────────
+const MEMORY_ROUNDS = 3
 
-const SYMBOLS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+function MemoireRunner({ niveau, onFinish }: { niveau: number; onFinish: (scorePct: number) => void }) {
+  const [round, setRound] = useState(0)
+  const [phase, setPhase] = useState<'display' | 'questions'>('display')
+  const [sequence, setSequence] = useState<string[]>(() => generateMemorySequence(niveau))
+  const [questions, setQuestions] = useState<Question[]>([])
+  const [qIndex, setQIndex] = useState(0)
+  const [selected, setSelected] = useState<string | null>(null)
+  const [correct, setCorrect] = useState(0)
+  const [countdown, setCountdown] = useState(0)
+  const totalQuestions = MEMORY_ROUNDS * 3
+  const displayTime = [5, 7, 8][niveau - 1]
 
-function generateGrid(size: number, targetSymbol: string) {
-  return Array.from({ length: size * size }, () =>
-    Math.random() < 0.15 ? targetSymbol : SYMBOLS[Math.floor(Math.random() * (SYMBOLS.length - 1))]
+  // Affichage de la séquence avec compte à rebours
+  useEffect(() => {
+    if (phase !== 'display') return
+    setCountdown(displayTime)
+    const itv = setInterval(() => {
+      setCountdown(c => {
+        if (c <= 1) {
+          clearInterval(itv)
+          setQuestions(memoryQuestionsFor(sequence))
+          setQIndex(0)
+          setPhase('questions')
+          return 0
+        }
+        return c - 1
+      })
+    }, 1000)
+    return () => clearInterval(itv)
+  }, [phase, sequence, displayTime])
+
+  function answer(opt: string) {
+    if (selected !== null) return
+    setSelected(opt)
+    const isCorrect = opt === questions[qIndex].answer
+    const newCorrect = correct + (isCorrect ? 1 : 0)
+    setCorrect(newCorrect)
+    setTimeout(() => {
+      setSelected(null)
+      if (qIndex + 1 < questions.length) {
+        setQIndex(i => i + 1)
+      } else if (round + 1 < MEMORY_ROUNDS) {
+        setRound(r => r + 1)
+        setSequence(generateMemorySequence(niveau))
+        setPhase('display')
+      } else {
+        onFinish(Math.round((newCorrect / totalQuestions) * 100))
+      }
+    }, 450)
+  }
+
+  const q = questions[qIndex]
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-gray-900">🧩 Mémoire</h2>
+        <span className="text-xs text-gray-400 font-medium">Série {round + 1} / {MEMORY_ROUNDS}</span>
+      </div>
+
+      <div className="card p-8 text-center min-h-64 flex flex-col items-center justify-center">
+        {phase === 'display' && (
+          <>
+            <p className="text-xs text-gray-400 mb-5">Mémorisez cette séquence — elle va disparaître :</p>
+            <div className="flex gap-2.5 justify-center flex-wrap mb-6">
+              {sequence.map((n, i) => (
+                <span key={i} className="w-12 h-12 bg-blue-700 text-white rounded-xl flex items-center justify-center text-2xl font-black">
+                  {n}
+                </span>
+              ))}
+            </div>
+            <div className={`text-4xl font-black tabular-nums ${countdown <= 2 ? 'text-red-500' : 'text-blue-600'}`}>
+              {countdown}
+            </div>
+          </>
+        )}
+        {phase === 'questions' && q && (
+          <>
+            <p className="text-xs text-gray-400 mb-2">Question {qIndex + 1} / {questions.length} de la série</p>
+            <p className="text-lg font-bold text-gray-900 mb-6">{q.prompt}</p>
+            <div className="grid grid-cols-2 gap-3 w-full max-w-xs">
+              {q.options.map((opt, i) => (
+                <button
+                  key={i}
+                  onClick={() => answer(opt)}
+                  disabled={selected !== null}
+                  className={`py-3 rounded-xl text-xl font-bold transition-all ${
+                    selected !== null
+                      ? opt === q.answer
+                        ? 'bg-green-100 text-green-700 border-2 border-green-400'
+                        : opt === selected
+                        ? 'bg-red-100 text-red-700 border-2 border-red-400'
+                        : 'bg-gray-50 text-gray-400 border border-gray-200'
+                      : 'bg-gray-50 text-gray-900 border border-gray-200 hover:border-blue-400 hover:bg-blue-50 active:scale-95'
+                  }`}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+      <p className="text-xs text-gray-400 text-center">Score : {correct} bonne{correct > 1 ? 's' : ''} réponse{correct > 1 ? 's' : ''}</p>
+    </div>
   )
 }
 
-function ExerciceConcentration({ niveau, onBack }: { niveau: number; onBack: () => void }) {
-  const gridSize = [5, 6, 7][niveau - 1]
-  const target = 'X'
-  const [grid, setGrid] = useState<string[]>(() => generateGrid(gridSize, target))
-  const [selected, setSelected] = useState<Set<number>>(new Set())
-  const [checked, setChecked] = useState(false)
+// ── Runner CONCENTRATION ────────────────────────────────────────
+const CONCENTRATION_GRIDS = 6
 
-  const correctIndices = new Set(grid.map((s, i) => s === target ? i : -1).filter(i => i >= 0))
+function ConcentrationRunner({ niveau, onFinish }: { niveau: number; onFinish: (scorePct: number) => void }) {
+  const [gridIndex, setGridIndex] = useState(0)
+  const [grid, setGrid] = useState<GridChallenge>(() => generateGrid(niveau))
+  const [found, setFound] = useState(0)
+  const [feedback, setFeedback] = useState<'ok' | 'ko' | 'timeout' | null>(null)
+  const timePerGrid = [14, 12, 10][niveau - 1]
+  const [remaining, setRemaining] = useState(timePerGrid)
+  const lockRef = useRef(false)
 
-  function toggle(i: number) {
-    if (checked) return
-    setSelected(prev => {
-      const n = new Set(prev)
-      n.has(i) ? n.delete(i) : n.add(i)
-      return n
-    })
+  const nextGrid = useCallback((newFound: number) => {
+    if (gridIndex + 1 >= CONCENTRATION_GRIDS) {
+      onFinish(Math.round((newFound / CONCENTRATION_GRIDS) * 100))
+    } else {
+      setGridIndex(i => i + 1)
+      setGrid(generateGrid(niveau))
+      setFeedback(null)
+      setRemaining(timePerGrid)
+      lockRef.current = false
+    }
+  }, [gridIndex, niveau, onFinish, timePerGrid])
+
+  // Chrono par grille
+  useEffect(() => {
+    if (feedback !== null) return
+    const itv = setInterval(() => {
+      setRemaining(r => {
+        if (r <= 1) {
+          clearInterval(itv)
+          if (!lockRef.current) {
+            lockRef.current = true
+            setFeedback('timeout')
+            setTimeout(() => nextGrid(found), 900)
+          }
+          return 0
+        }
+        return r - 1
+      })
+    }, 1000)
+    return () => clearInterval(itv)
+  }, [gridIndex, feedback, found, nextGrid])
+
+  function clickCell(i: number) {
+    if (lockRef.current) return
+    lockRef.current = true
+    const ok = i === grid.intruderIndex
+    const newFound = found + (ok ? 1 : 0)
+    setFound(newFound)
+    setFeedback(ok ? 'ok' : 'ko')
+    setTimeout(() => nextGrid(newFound), 700)
   }
-
-  function check() {
-    setChecked(true)
-  }
-
-  function restart() {
-    setGrid(generateGrid(gridSize, target))
-    setSelected(new Set())
-    setChecked(false)
-  }
-
-  const correct = Array.from(selected).filter(i => correctIndices.has(i)).length
-  const missed = Array.from(correctIndices).filter(i => !selected.has(i)).length
-  const false_pos = Array.from(selected).filter(i => !correctIndices.has(i)).length
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
-      <button onClick={onBack} className="text-sm text-gray-400 hover:text-gray-700 flex items-center gap-1">← Retour</button>
-      <div>
-        <h2 className="text-xl font-bold text-gray-900">🎯 Concentration</h2>
-        <p className="text-sm text-gray-400">Niveau {niveau} · Grille {gridSize}×{gridSize}</p>
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-gray-900">🎯 Concentration</h2>
+        <span className="text-xs text-gray-400 font-medium">Grille {gridIndex + 1} / {CONCENTRATION_GRIDS} · {found} trouvé{found > 1 ? 's' : ''}</span>
       </div>
+      <TimerBar remaining={remaining} total={timePerGrid} />
 
       <div className="card p-5">
-        <p className="text-sm text-gray-700 mb-1">
-          Cliquez sur toutes les cases contenant la lettre{' '}
-          <strong className="text-blue-700 text-lg">X</strong>
+        <p className="text-sm text-gray-700 mb-4 text-center">
+          Trouvez l&apos;<strong>intrus</strong> dans la grille — un seul caractère est différent.
         </p>
-        <p className="text-xs text-gray-400 mb-5">Ne cliquez pas sur les autres lettres.</p>
-
         <div
-          className="grid gap-1.5 mx-auto"
-          style={{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }}
+          className="grid gap-1.5 mx-auto max-w-sm"
+          style={{ gridTemplateColumns: `repeat(${grid.size}, minmax(0, 1fr))` }}
         >
-          {grid.map((sym, i) => {
-            const isSelected = selected.has(i)
-            const isCorrect = correctIndices.has(i)
+          {grid.cells.map((sym, i) => {
             let cls = 'bg-gray-100 border border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-300'
-            if (checked) {
-              if (isCorrect && isSelected) cls = 'bg-green-100 border-green-400 text-green-700 border-2'
-              else if (isCorrect && !isSelected) cls = 'bg-red-100 border-red-400 text-red-700 border-2'
-              else if (!isCorrect && isSelected) cls = 'bg-orange-100 border-orange-400 text-orange-700 border-2'
-              else cls = 'bg-gray-100 border-gray-200 text-gray-500'
-            } else if (isSelected) {
-              cls = 'bg-blue-600 border-blue-600 text-white border-2'
+            if (feedback !== null && i === grid.intruderIndex) {
+              cls = feedback === 'ok'
+                ? 'bg-green-100 border-2 border-green-400 text-green-700'
+                : 'bg-amber-100 border-2 border-amber-400 text-amber-700'
             }
             return (
               <button
                 key={i}
-                onClick={() => toggle(i)}
+                onClick={() => clickCell(i)}
                 className={`h-10 rounded-lg text-sm font-bold transition-all ${cls}`}
               >
                 {sym}
@@ -509,153 +555,422 @@ function ExerciceConcentration({ niveau, onBack }: { niveau: number; onBack: () 
             )
           })}
         </div>
-
-        {!checked ? (
-          <button onClick={check} className="btn-primary w-full mt-5">Vérifier</button>
-        ) : (
-          <div className="mt-5 space-y-3">
-            <div className="grid grid-cols-3 gap-3 text-center">
-              <div className="bg-green-50 rounded-xl p-3">
-                <div className="text-xl font-black text-green-600">{correct}</div>
-                <div className="text-xs text-green-700">Trouvés</div>
-              </div>
-              <div className="bg-red-50 rounded-xl p-3">
-                <div className="text-xl font-black text-red-600">{missed}</div>
-                <div className="text-xs text-red-700">Manqués</div>
-              </div>
-              <div className="bg-orange-50 rounded-xl p-3">
-                <div className="text-xl font-black text-orange-600">{false_pos}</div>
-                <div className="text-xs text-orange-700">Erreurs</div>
-              </div>
-            </div>
-            <button onClick={restart} className="btn-primary w-full">Nouvel exercice</button>
-            <button onClick={onBack} className="btn-secondary w-full">Retour aux modules</button>
-          </div>
-        )}
+        {feedback === 'ok' && <p className="text-center text-sm font-semibold text-green-600 mt-4">✓ Bien vu !</p>}
+        {feedback === 'ko' && <p className="text-center text-sm font-semibold text-red-600 mt-4">✗ Raté — l&apos;intrus est surligné</p>}
+        {feedback === 'timeout' && <p className="text-center text-sm font-semibold text-amber-600 mt-4">⏱ Temps écoulé</p>}
       </div>
     </div>
   )
 }
 
-// ============================================================
-// EXERCICE — RAPIDITÉ
-// ============================================================
-
-interface RapiditeQuestion {
-  question: string
-  reponse: number | string
-  options: (number | string)[]
+// ── Bilan psychotechnique ───────────────────────────────────────
+function compatibiliteIndicative(global: number): { label: string; color: string } {
+  if (global >= 75) return { label: 'Élevée', color: 'text-green-600' }
+  if (global >= 55) return { label: 'Correcte — continuez l\'entraînement', color: 'text-amber-600' }
+  return { label: 'À renforcer — entraînez-vous régulièrement', color: 'text-red-600' }
 }
 
-function generateRapidite(niveau: number): RapiditeQuestion {
-  const a = Math.floor(Math.random() * 10) + 1
-  const b = Math.floor(Math.random() * 10) + 1
-  const ops = niveau === 1 ? ['+', '-'] : niveau === 2 ? ['+', '-', '×'] : ['+', '-', '×', 'pair/impair']
-  const op = ops[Math.floor(Math.random() * ops.length)]
-
-  let question = ''
-  let reponse: number | string = 0
-
-  if (op === '+') {
-    question = `${a} + ${b} = ?`
-    reponse = a + b
-  } else if (op === '-') {
-    const [x, y] = [Math.max(a, b), Math.min(a, b)]
-    question = `${x} - ${y} = ?`
-    reponse = x - y
-  } else if (op === '×') {
-    const [x, y] = [Math.min(a, 5), Math.min(b, 5)]
-    question = `${x} × ${y} = ?`
-    reponse = x * y
-  } else {
-    const n = Math.floor(Math.random() * 20) + 1
-    question = `${n} est ?`
-    reponse = n % 2 === 0 ? 'Pair' : 'Impair'
-  }
-
-  const r = reponse as number
-  const wrong = typeof r === 'number'
-    ? [r + 1, r - 1, r + 2].filter(n => n !== r && n >= 0)
-    : ['Pair', 'Impair'].filter(s => s !== reponse)
-
-  const options = [reponse, ...wrong.slice(0, 3)].sort(() => Math.random() - 0.5)
-  return { question, reponse, options }
-}
-
-function ExerciceRapidite({ niveau, onBack }: { niveau: number; onBack: () => void }) {
-  const [question, setQuestion] = useState<RapiditeQuestion>(() => generateRapidite(niveau))
-  const [answered, setAnswered] = useState(false)
-  const [selected, setSelected] = useState<number | string | null>(null)
-  const [stats, setStats] = useState({ correct: 0, total: 0, streak: 0, bestStreak: 0 })
-
-  function answer(opt: number | string) {
-    if (answered) return
-    setSelected(opt)
-    setAnswered(true)
-    const isCorrect = opt === question.reponse
-    setStats(s => ({
-      correct: s.correct + (isCorrect ? 1 : 0),
-      total: s.total + 1,
-      streak: isCorrect ? s.streak + 1 : 0,
-      bestStreak: isCorrect ? Math.max(s.bestStreak, s.streak + 1) : s.bestStreak,
-    }))
-    setTimeout(() => {
-      setQuestion(generateRapidite(niveau))
-      setSelected(null)
-      setAnswered(false)
-    }, 600)
-  }
+function BilanView({
+  scores, niveau, onRestart, onBack,
+}: {
+  scores: Partial<Record<ModuleId, number>>
+  niveau: number
+  onRestart: () => void
+  onBack: () => void
+}) {
+  const entries = MODULE_ORDER.filter(m => scores[m] !== undefined)
+  const global = entries.length > 0
+    ? Math.round(entries.reduce((a, m) => a + (scores[m] ?? 0), 0) / entries.length)
+    : 0
+  const forts = entries.filter(m => (scores[m] ?? 0) >= 70)
+  const axes = entries.filter(m => (scores[m] ?? 0) < 60)
+  const compat = compatibiliteIndicative(global)
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
-      <button onClick={onBack} className="text-sm text-gray-400 hover:text-gray-700 flex items-center gap-1">← Retour</button>
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">⚡ Rapidité</h2>
-          <p className="text-sm text-gray-400">Niveau {niveau}</p>
-        </div>
-        <div className="flex gap-4">
-          <div className="text-center">
-            <div className="text-2xl font-black text-blue-700">{stats.correct}/{stats.total}</div>
-            <div className="text-xs text-gray-400">Score</div>
-          </div>
-          {stats.streak > 1 && (
-            <div className="text-center">
-              <div className="text-2xl font-black text-orange-500">×{stats.streak}</div>
-              <div className="text-xs text-gray-400">Série</div>
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900">Bilan psychotechnique</h2>
+        <p className="text-sm text-gray-400 mt-1">Niveau {niveau} · {entries.length} module{entries.length > 1 ? 's' : ''} évalué{entries.length > 1 ? 's' : ''}</p>
+      </div>
+
+      {/* Scores par module */}
+      <div className="card p-6 space-y-4">
+        {entries.map(m => {
+          const s = scores[m] ?? 0
+          const color = s >= 70 ? 'bg-green-500' : s >= 50 ? 'bg-amber-400' : 'bg-red-400'
+          return (
+            <div key={m}>
+              <div className="flex justify-between mb-1.5">
+                <span className="text-sm font-medium text-gray-800">{MODULE_META[m].icon} {MODULE_META[m].label}</span>
+                <span className="text-sm font-bold text-gray-700 tabular-nums">{s} %</span>
+              </div>
+              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className={`h-full rounded-full transition-all duration-700 ${color}`} style={{ width: `${s}%` }} />
+              </div>
             </div>
+          )
+        })}
+      </div>
+
+      {/* Score global */}
+      <div className="card p-6 text-center">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Score global</p>
+        <p className={`text-5xl font-black ${global >= 70 ? 'text-green-600' : global >= 50 ? 'text-amber-500' : 'text-red-500'}`}>
+          {global} %
+        </p>
+      </div>
+
+      {/* Points forts / Axes d'amélioration */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div className="card p-5">
+          <h3 className="font-bold text-gray-900 mb-3 text-sm">💪 Points forts</h3>
+          {forts.length > 0 ? (
+            <ul className="space-y-2">
+              {forts.map(m => (
+                <li key={m} className="flex items-center gap-2 text-sm text-gray-700">
+                  <span className="text-green-500">✓</span> {MODULE_META[m].label} ({scores[m]} %)
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-gray-400">Aucun module au-dessus de 70 % pour l&apos;instant — la régularité paie.</p>
+          )}
+        </div>
+        <div className="card p-5">
+          <h3 className="font-bold text-gray-900 mb-3 text-sm">🎯 Axes d&apos;amélioration</h3>
+          {axes.length > 0 ? (
+            <ul className="space-y-2">
+              {axes.map(m => (
+                <li key={m} className="flex items-center gap-2 text-sm text-gray-700">
+                  <span className="text-amber-500">→</span> {MODULE_META[m].label} ({scores[m]} %)
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-gray-400">Aucune faiblesse marquée — maintenez le rythme.</p>
           )}
         </div>
       </div>
 
-      <div className="card p-8 text-center">
-        <p className="text-3xl font-black text-gray-900 mb-8">{question.question}</p>
-        <div className="grid grid-cols-2 gap-3">
-          {question.options.map((opt, i) => (
+      {/* Compatibilité indicative */}
+      <div className="card p-5 text-center">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Compatibilité psychotechnique indicative</p>
+        <p className={`text-lg font-bold ${compat.color}`}>{compat.label}</p>
+        <p className="text-xs text-gray-400 mt-2">
+          Évaluation indicative d&apos;entraînement — elle ne préjuge pas des résultats aux tests officiels des opérateurs.
+        </p>
+      </div>
+
+      <div className="flex gap-3">
+        <button onClick={onRestart} className="btn-primary flex-1 justify-center py-3">Refaire un bilan</button>
+        <button onClick={onBack} className="btn-secondary flex-1 justify-center py-3">Retour aux modules</button>
+      </div>
+    </div>
+  )
+}
+
+// ── Historique ──────────────────────────────────────────────────
+interface HistRow {
+  id: string
+  module: string
+  score: number
+  niveau: number
+  created_at: string
+}
+
+function HistoriqueSection({ rows }: { rows: HistRow[] }) {
+  if (rows.length === 0) return null
+
+  const best = Math.max(...rows.map(r => r.score))
+  const last = rows[0]
+  const prev = rows[1]
+  const progression = prev ? last.score - prev.score : null
+
+  return (
+    <div className="card p-6">
+      <h2 className="font-bold text-gray-900 mb-4">📈 Votre historique</h2>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+        <div className="bg-gray-50 rounded-xl p-3 text-center">
+          <p className="text-2xl font-black text-gray-900 tabular-nums">{rows.length}</p>
+          <p className="text-xs text-gray-400">Exercices réalisés</p>
+        </div>
+        <div className="bg-gray-50 rounded-xl p-3 text-center">
+          <p className="text-2xl font-black text-blue-700 tabular-nums">{best} %</p>
+          <p className="text-xs text-gray-400">Meilleur score</p>
+        </div>
+        <div className="bg-gray-50 rounded-xl p-3 text-center">
+          <p className="text-2xl font-black text-gray-900 tabular-nums">{last.score} %</p>
+          <p className="text-xs text-gray-400">Dernier score</p>
+        </div>
+        <div className="bg-gray-50 rounded-xl p-3 text-center">
+          <p className={`text-2xl font-black tabular-nums ${progression === null ? 'text-gray-300' : progression >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+            {progression === null ? '—' : progression > 0 ? `+${progression}` : progression}
+          </p>
+          <p className="text-xs text-gray-400">Progression</p>
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        {rows.slice(0, 6).map(r => {
+          const meta = MODULE_META[r.module as ModuleId]
+          return (
+            <div key={r.id} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0 text-sm">
+              <span className="text-lg">{meta?.icon ?? '🧠'}</span>
+              <span className="flex-1 text-gray-700">{meta?.label ?? r.module} · Niveau {r.niveau}</span>
+              <span className="text-xs text-gray-400">
+                {new Date(r.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+              </span>
+              <span className={`font-bold tabular-nums ${r.score >= 70 ? 'text-green-600' : r.score >= 50 ? 'text-amber-500' : 'text-red-500'}`}>
+                {r.score} %
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ── PAGE PRINCIPALE ─────────────────────────────────────────────
+type Mode = 'hub' | 'module' | 'module-result' | 'bilan-run' | 'bilan-result'
+
+export default function PsychotechniquePage() {
+  const [mode, setMode] = useState<Mode>('hub')
+  const [niveau, setNiveau] = useState(1)
+  const [activeModule, setActiveModule] = useState<ModuleId>('memoire')
+  const [bilanIndex, setBilanIndex] = useState(0)
+  const [sessionScores, setSessionScores] = useState<Partial<Record<ModuleId, number>>>({})
+  const [lastScore, setLastScore] = useState<number | null>(null)
+  const [history, setHistory] = useState<HistRow[]>([])
+  const [runKey, setRunKey] = useState(0)
+
+  const loadHistory = useCallback(async () => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data, error } = await supabase
+      .from('psycho_sessions')
+      .select('id, module, score, niveau, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(30)
+    if (error) {
+      console.error('[Psycho] loadHistory error:', error.message)
+      return
+    }
+    setHistory((data ?? []) as HistRow[])
+  }, [])
+
+  useEffect(() => { loadHistory() }, [loadHistory])
+
+  async function saveScore(module: ModuleId, score: number) {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      console.warn('[Psycho] no user — score not saved')
+      return
+    }
+    const { error } = await supabase.from('psycho_sessions').insert({
+      user_id: user.id,
+      module,
+      score,
+      niveau,
+    })
+    if (error) console.error('[Psycho] save error:', error.message)
+    else loadHistory()
+  }
+
+  function startModule(m: ModuleId) {
+    setActiveModule(m)
+    setRunKey(k => k + 1)
+    setMode('module')
+  }
+
+  function startBilan() {
+    setSessionScores({})
+    setBilanIndex(0)
+    setActiveModule(MODULE_ORDER[0])
+    setRunKey(k => k + 1)
+    setMode('bilan-run')
+  }
+
+  function handleModuleFinish(score: number) {
+    saveScore(activeModule, score)
+    if (mode === 'bilan-run') {
+      const newScores = { ...sessionScores, [activeModule]: score }
+      setSessionScores(newScores)
+      if (bilanIndex + 1 < MODULE_ORDER.length) {
+        setBilanIndex(i => i + 1)
+        setActiveModule(MODULE_ORDER[bilanIndex + 1])
+        setRunKey(k => k + 1)
+      } else {
+        setMode('bilan-result')
+      }
+    } else {
+      setLastScore(score)
+      setMode('module-result')
+    }
+  }
+
+  function renderRunner() {
+    const common = { key: `${activeModule}-${runKey}` }
+    if (activeModule === 'memoire') {
+      return <MemoireRunner {...common} niveau={niveau} onFinish={handleModuleFinish} />
+    }
+    if (activeModule === 'logique') {
+      const questions = Array.from({ length: 10 }, () => generateLogicQuestion(niveau))
+      const totalTime = [120, 100, 80][niveau - 1]
+      return <QuizRunner {...common} title="Logique" icon="🔢" questions={questions} totalTime={totalTime} onFinish={handleModuleFinish} />
+    }
+    if (activeModule === 'concentration') {
+      return <ConcentrationRunner {...common} niveau={niveau} onFinish={handleModuleFinish} />
+    }
+    const questions = Array.from({ length: 20 }, () => generateSpeedQuestion(niveau))
+    const totalTime = [90, 75, 60][niveau - 1]
+    return <QuizRunner {...common} title="Rapidité" icon="⚡" questions={questions} totalTime={totalTime} onFinish={handleModuleFinish} />
+  }
+
+  // ── Vues ──
+  if (mode === 'module' || mode === 'bilan-run') {
+    return (
+      <div className="max-w-lg mx-auto px-4 py-8 pb-24 lg:pb-8 space-y-5">
+        <div className="flex items-center justify-between">
+          <button onClick={() => setMode('hub')} className="text-sm text-gray-400 hover:text-gray-700">← Quitter</button>
+          {mode === 'bilan-run' && (
+            <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-3 py-1 rounded-full">
+              Bilan complet · Module {bilanIndex + 1}/4
+            </span>
+          )}
+        </div>
+        {renderRunner()}
+      </div>
+    )
+  }
+
+  if (mode === 'module-result' && lastScore !== null) {
+    const meta = MODULE_META[activeModule]
+    return (
+      <div className="max-w-lg mx-auto px-4 py-8 pb-24 lg:pb-8 space-y-6">
+        <div className="card p-8 text-center">
+          <span className="text-4xl">{meta.icon}</span>
+          <h2 className="text-xl font-bold text-gray-900 mt-3">{meta.label} — Niveau {niveau}</h2>
+          <p className={`text-6xl font-black my-5 ${lastScore >= 70 ? 'text-green-600' : lastScore >= 50 ? 'text-amber-500' : 'text-red-500'}`}>
+            {lastScore} %
+          </p>
+          <p className="text-sm text-gray-500 mb-6">
+            {lastScore >= 70 ? 'Excellent — continuez sur cette lancée.' : lastScore >= 50 ? 'Bon résultat — la marge de progression est réelle.' : 'L\'entraînement régulier fait toute la différence.'}
+          </p>
+          <p className="text-xs text-gray-400 mb-6">Score enregistré dans votre historique.</p>
+          <div className="flex gap-3">
+            <button onClick={() => startModule(activeModule)} className="btn-primary flex-1 justify-center">Recommencer</button>
+            <button onClick={() => setMode('hub')} className="btn-secondary flex-1 justify-center">Retour</button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (mode === 'bilan-result') {
+    return (
+      <div className="max-w-lg mx-auto px-4 py-8 pb-24 lg:pb-8">
+        <BilanView
+          scores={sessionScores}
+          niveau={niveau}
+          onRestart={startBilan}
+          onBack={() => setMode('hub')}
+        />
+      </div>
+    )
+  }
+
+  // ── HUB ──
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-8 pb-24 lg:pb-8 space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Tests psychotechniques</h1>
+        <p className="text-gray-500 mt-1 text-sm">
+          Exercices interactifs chronométrés · score calculé · progression enregistrée.
+        </p>
+      </div>
+
+      {/* Sélecteur de niveau global */}
+      <div className="card p-4 flex items-center justify-between gap-4 flex-wrap">
+        <p className="text-sm font-semibold text-gray-700">Niveau de difficulté</p>
+        <div className="flex gap-2">
+          {[1, 2, 3].map(n => (
             <button
-              key={i}
-              onClick={() => answer(opt)}
-              disabled={answered}
-              className={`py-4 text-xl font-bold rounded-xl transition-all ${
-                answered
-                  ? opt === question.reponse
-                    ? 'bg-green-100 text-green-700 border-2 border-green-400'
-                    : opt === selected
-                    ? 'bg-red-100 text-red-700 border-2 border-red-400'
-                    : 'bg-gray-50 text-gray-400'
-                  : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-orange-50 hover:border-orange-400 active:scale-95'
+              key={n}
+              onClick={() => setNiveau(n)}
+              className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all ${
+                niveau === n
+                  ? 'bg-blue-700 text-white'
+                  : 'bg-white border border-gray-200 text-gray-600 hover:border-blue-300'
               }`}
             >
-              {opt}
+              Niveau {n}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="text-center">
-        <button onClick={onBack} className="text-sm text-gray-400 hover:underline">
-          Terminer et voir le score
+      {/* Bilan complet CTA */}
+      <div className="bg-gradient-to-br from-blue-700 to-blue-900 rounded-2xl p-6 text-white">
+        <h2 className="font-bold text-lg mb-1">🏁 Bilan psychotechnique complet</h2>
+        <p className="text-blue-200 text-sm mb-4">
+          Enchaînez les 4 modules au niveau {niveau} et obtenez votre bilan : scores par module,
+          score global, points forts, axes d&apos;amélioration et compatibilité indicative.
+        </p>
+        <button
+          onClick={startBilan}
+          className="bg-white text-blue-700 font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-blue-50 transition-colors"
+        >
+          Lancer le bilan complet →
         </button>
+      </div>
+
+      {/* Modules individuels */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        {MODULE_ORDER.map(m => {
+          const meta = MODULE_META[m]
+          const lastForModule = history.find(h => h.module === m)
+          return (
+            <div key={m} className="card p-5 flex flex-col">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-3xl">{meta.icon}</span>
+                <div className="flex-1">
+                  <h3 className="font-bold text-gray-900">{meta.label}</h3>
+                  {lastForModule && (
+                    <p className="text-xs text-gray-400">Dernier score : <span className="font-semibold text-gray-600">{lastForModule.score} %</span></p>
+                  )}
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 mb-4 leading-relaxed flex-1">{meta.description}</p>
+              <button
+                onClick={() => startModule(m)}
+                className="btn-primary w-full justify-center"
+              >
+                Commencer →
+              </button>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Historique */}
+      <HistoriqueSection rows={history} />
+
+      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-800">
+        <strong>Note RailReady :</strong> ces exercices sont inspirés des typologies de tests psychotechniques
+        rencontrés en recrutement ferroviaire. Ils ne reproduisent pas les sujets réels ou confidentiels des opérateurs.
+      </div>
+
+      <div className="card p-5 flex items-center justify-between gap-4">
+        <div>
+          <p className="font-semibold text-gray-900 text-sm">Testez-vous en conditions réelles</p>
+          <p className="text-xs text-gray-400 mt-0.5">Simulez un entretien complet avec notre recruteur IA</p>
+        </div>
+        <Link href="/entretien" className="btn-primary text-sm py-2 flex-shrink-0">
+          Entretien IA →
+        </Link>
       </div>
     </div>
   )

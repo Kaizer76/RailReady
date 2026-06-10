@@ -78,9 +78,8 @@ export default function AProposPage() {
           des retours d&apos;expérience terrain reformulés, et des contenus pédagogiques originaux.
         </p>
         <p className="text-gray-600 leading-relaxed">
-          Certains éléments sont signalés <em className="text-amber-600">[À VALIDER]</em> lorsqu&apos;ils
-          nécessitent encore une confirmation par des professionnels du secteur. La plateforme
-          est mise à jour régulièrement.
+          Les informations sont fournies à titre indicatif et peuvent évoluer selon les opérateurs
+          ferroviaires. La plateforme est mise à jour régulièrement.
         </p>
       </div>
 

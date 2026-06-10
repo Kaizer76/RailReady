@@ -1,13 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { getSiteURL } from '@/lib/utils/site-url'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
+
+  // Affiche un message si on arrive ici suite à un lien expiré (?error=expired)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('error') === 'expired') {
+      setErrorMsg('Votre lien de réinitialisation a expiré ou a déjà été utilisé. Demandez un nouveau lien ci-dessous.')
+      setStatus('error')
+    }
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -15,8 +25,10 @@ export default function ForgotPasswordPage() {
     setErrorMsg('')
 
     const supabase = createClient()
+    const redirectTo = `${getSiteURL()}/callback?type=recovery`
+    console.log('[ForgotPassword] resetPasswordForEmail redirectTo =', redirectTo)
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/callback?type=recovery`,
+      redirectTo,
     })
 
     if (error) {

@@ -3,6 +3,14 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Palette RailReady — rouge ferroviaire moderne */
+  --primary: #c62828;
+  --primary-dark: #8e0000;
+  --secondary: #1f2937;
+  --background: #f8fafc;
+}
+
 @layer base {
   * {
     box-sizing: border-box;
@@ -130,7 +138,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='120'%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='system-ui,sans-serif' font-size='13' font-weight='700' letter-spacing='3' fill='%231d4ed8' opacity='0.028' transform='rotate(-20 110 60)'%3ERAILREADY%3C/text%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='120'%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='system-ui,sans-serif' font-size='13' font-weight='700' letter-spacing='3' fill='%23c62828' opacity='0.028' transform='rotate(-20 110 60)'%3ERAILREADY%3C/text%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 220px 120px;
 }
@@ -140,8 +148,8 @@
   @apply bg-white rounded-2xl border border-gray-200/80 shadow-sm transition-all duration-200;
 }
 .kpi-card:hover {
-  box-shadow: 0 4px 24px -4px rgba(29, 78, 216, 0.10);
-  border-color: rgba(147, 197, 253, 0.6);
+  box-shadow: 0 4px 24px -4px rgba(198, 40, 40, 0.10);
+  border-color: rgba(233, 163, 163, 0.6);
   transform: translateY(-1px);
 }
 
@@ -151,7 +159,7 @@
 }
 .progress-bar-fill {
   @apply h-full rounded-full transition-all duration-700 ease-out;
-  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  background: linear-gradient(90deg, #8e0000, #c62828);
 }
 
 /* Gradient badge score */

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import type { FicheMetier } from '@/data/metiers'
+import { DISCLAIMER_METIER, type FicheMetier } from '@/data/metiers'
 
 const TABS = [
   { id: 'presentation', label: 'Présentation', icon: '📋' },
@@ -216,27 +216,22 @@ export default function MetierTabs({ metier }: MetierTabsProps) {
             <p className="text-gray-700 leading-relaxed text-base">{metier.description}</p>
           </div>
 
-          {/* Journée type */}
+          {/* Exemple de missions */}
           <div className="card p-6">
-            <h3 className="font-bold text-gray-900 mb-1">Journée type</h3>
-            <p className="text-sm text-gray-500 italic mb-5">{metier.journee_type.intro}</p>
-            <div className="space-y-4">
-              {metier.journee_type.etapes.map((etape, i) => (
-                <div key={i} className="flex gap-4">
-                  <span className="font-mono text-sm text-blue-600 w-20 flex-shrink-0 pt-0.5 font-semibold">
-                    {etape.heure}
+            <h3 className="font-bold text-gray-900 mb-1">Exemple de missions</h3>
+            <p className="text-sm text-gray-500 italic mb-5">
+              Le déroulement d&apos;un service varie selon les affectations — voici les grandes étapes représentatives du métier.
+            </p>
+            <div className="space-y-3">
+              {metier.exemple_missions.map((mission, i) => (
+                <div key={i} className="flex gap-3 items-start">
+                  <span className="w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                    {i + 1}
                   </span>
-                  <div className="flex-1 pb-4 border-b border-gray-100 last:border-0">
-                    <p className="text-gray-700 text-sm leading-relaxed">{etape.description}</p>
-                  </div>
+                  <p className="text-gray-700 text-sm leading-relaxed pt-0.5">{mission}</p>
                 </div>
               ))}
             </div>
-            {metier.journee_type.note && (
-              <p className="mt-4 text-sm text-amber-700 bg-amber-50 rounded-xl p-3">
-                {metier.journee_type.note}
-              </p>
-            )}
           </div>
 
           {/* Avantages / Contraintes */}
@@ -391,8 +386,8 @@ export default function MetierTabs({ metier }: MetierTabsProps) {
       {activeTab === 'salaire' && (
         <div className="space-y-6">
           <div className="card p-6">
-            <h3 className="font-bold text-gray-900 mb-6">Grille salariale indicative</h3>
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            <h3 className="font-bold text-gray-900 mb-6">Rémunération indicative</h3>
+            <div className="grid grid-cols-2 gap-4">
               <div className="bg-gray-50 rounded-xl p-4 text-center">
                 <p className="text-xs text-gray-400 mb-1">Débutant</p>
                 <p className="text-xl font-black text-gray-900">{metier.salaire.brut_debutant}</p>
@@ -404,30 +399,6 @@ export default function MetierTabs({ metier }: MetierTabsProps) {
                 <p className="text-xs text-blue-400">brut/mois</p>
               </div>
             </div>
-
-            {metier.salaire.avantages_nature?.length > 0 && (
-              <div>
-                <p className="font-semibold text-gray-700 mb-3 text-sm">Avantages en nature :</p>
-                <div className="flex flex-wrap gap-2">
-                  {metier.salaire.avantages_nature.map((av: string, i: number) => (
-                    <span key={i} className="text-xs bg-green-50 border border-green-100 text-green-700 px-3 py-1.5 rounded-full">
-                      ✔ {av}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {metier.salaire.note_validation && (
-              <p className="mt-4 text-xs text-amber-700 bg-amber-50 rounded-xl p-3">
-                ⚠ {metier.salaire.note_validation}
-              </p>
-            )}
-          </div>
-
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-500">
-            Les salaires indiqués sont des estimations basées sur des données publiques (juin 2026).
-            Ils varient selon l'opérateur, l'ancienneté, le lieu d'affectation et les primes.
           </div>
         </div>
       )}
@@ -450,11 +421,6 @@ export default function MetierTabs({ metier }: MetierTabsProps) {
                 </span>
               </div>
             ))}
-            {metier.horaires.note_validation && (
-              <p className="text-sm text-amber-700 bg-amber-50 rounded-xl p-3 mt-2">
-                {metier.horaires.note_validation}
-              </p>
-            )}
           </div>
 
           <div className="card p-6">
@@ -514,11 +480,6 @@ export default function MetierTabs({ metier }: MetierTabsProps) {
             </div>
           )}
 
-          {metier.formation.note && (
-            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-4">
-              ⚠ {metier.formation.note}
-            </p>
-          )}
         </div>
       )}
 
@@ -661,6 +622,11 @@ export default function MetierTabs({ metier }: MetierTabsProps) {
           </div>
         </div>
       )}
+
+      {/* Disclaimer unique — une seule fois par fiche métier */}
+      <p className="mt-8 text-xs text-gray-400 bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
+        {DISCLAIMER_METIER}
+      </p>
     </div>
   )
 }
