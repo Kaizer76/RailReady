@@ -14,13 +14,13 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
 
     const {
-      module, note, coherent, info_inexacte, info_manquante,
+      module: feedbackModule, note, coherent, info_inexacte, info_manquante,
       metier_actuel, recontact, commentaire, contexte,
       user_id, email,
     } = body
 
     // Validation minimale
-    if (!module || !note || note < 1 || note > 5) {
+    if (!feedbackModule || !note || note < 1 || note > 5) {
       return NextResponse.json({ error: 'Données invalides' }, { status: 400 })
     }
     if (!commentaire?.trim()) {
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { error } = await supabase.from('beta_feedbacks').insert({
-      module,
+      module: feedbackModule,
       note,
       coherent: coherent || null,
       info_inexacte: info_inexacte || null,
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url)
     const limit = parseInt(searchParams.get('limit') || '50')
-    const module = searchParams.get('module')
+    const feedbackModule = searchParams.get('module')
 
     let query = supabase
       .from('beta_feedbacks')
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(limit)
 
-    if (module) query = query.eq('module', module)
+    if (feedbackModule) query = query.eq('module', feedbackModule)
 
     const { data, error } = await query
 
