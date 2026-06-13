@@ -15,6 +15,7 @@ const NAV_ITEMS = [
 
 const NAV_DRAWER_EXTRA = [
   { href: '/mentor', icon: '💬', label: 'Mentor Ferroviaire' },
+  { href: '/nouveaux-arrivants', icon: '🚆', label: 'Nouveaux Arrivants' },
   { href: '/a-propos', icon: 'ℹ️', label: 'À propos' },
 ]
 

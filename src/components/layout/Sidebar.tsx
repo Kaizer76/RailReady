@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: '/entretien', icon: '🎤', label: 'Simulateur d\'entretien' },
   { href: '/psychotechnique', icon: '🧠', label: 'Psychotechnique' },
   { href: '/mentor', icon: '💬', label: 'Mentor Ferroviaire' },
+  { href: '/nouveaux-arrivants', icon: '🚆', label: 'Nouveaux Arrivants' },
 ]
 
 const NAV_BOTTOM = [

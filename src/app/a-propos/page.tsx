@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export const metadata = {
   title: 'À propos — RailReady',
   description: 'Plateforme indépendante de préparation aux métiers ferroviaires.',
@@ -6,6 +8,15 @@ export const metadata = {
 export default function AProposPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-16 pb-24">
+      {/* Bouton retour */}
+      <div className="mb-8">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-700 transition-colors"
+        >
+          ← Retour au tableau de bord
+        </Link>
+      </div>
 
       {/* Hero */}
       <div className="text-center mb-16">

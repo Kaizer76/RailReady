@@ -1,8 +1,9 @@
 'use client'
 
 // ============================================================
-// RAILREADY — Quiz Test de Compatibilité V3
-// 27 questions situationnelles | Sans biais de désirabilité
+// RAILREADY — Quiz Test de Compatibilité V1.1
+// 47 questions situationnelles | Sans biais de désirabilité
+// 20 nouvelles questions discriminantes ajoutées en V1.1
 // ============================================================
 
 import { useState, useEffect } from 'react'
@@ -143,6 +144,118 @@ const QUESTIONS = [
     text: "Votre premier poste vous est affecté dans une ville à 200 km de là où vous vivez actuellement :",
     context: "Les affectations initiales ne sont pas toujours négociables dans le ferroviaire.",
     echelle: ["C'est un obstacle majeur — ma situation personnelle rend cela impossible ou très difficile","C'est compliqué — j'accepterais peut-être mais avec beaucoup d'hésitation","Je peux l'envisager si le poste me correspond vraiment","Je l'accepte — c'est souvent inévitable en début de carrière","Ça ne me pose pas de problème — je suis prêt(e) à m'adapter géographiquement"] },
+
+  // ── V1.1 : 20 nouvelles questions discriminantes ──────────────
+
+  // SOLITUDE RENFORCÉE (s4, s5) — discrimination Conducteur vs ASCT
+  { id: 's4', dimension: 'solitude', weight: 2.0,
+    text: "Imaginez une semaine de travail où vous n'avez aucune interaction sociale significative avec des collègues. Votre ressenti dominant serait :",
+    context: "Un conducteur de train peut passer l'essentiel de sa semaine sans croiser ses collègues, uniquement par téléphone ou radio.",
+    echelle: ["Un ressenti négatif fort — l'isolement me pèserait rapidement et durablement","Un peu difficile — le lien social avec les collègues me manquerait","Neutre — j'ai d'autres sources de liens en dehors du travail","Plutôt bien — chaque jour m'appartient sans avoir à gérer les dynamiques de groupe","Parfaitement à l'aise — cette autonomie relationnelle est ce que je recherche"] },
+
+  { id: 's5', dimension: 'solitude', weight: 1.8,
+    text: "Sur une journée de 8 heures, quelle proportion de temps passé seul(e) vous semblerait idéale pour travailler efficacement ?",
+    context: "La proportion varie énormément selon les métiers : 95% seul en cabine de conduite vs 10% seul en poste de vente.",
+    echelle: ["Moins de 20% — j'ai besoin de présence humaine continue pour rester motivé(e)","Entre 20% et 40% — quelques plages solo suffisent","Entre 40% et 60% — un équilibre entre présence et solitude","Entre 60% et 80% — je suis plus efficace avec de l'espace","Plus de 80% — j'ai besoin de longues plages de travail solitaire"] },
+
+  // AUTONOMIE / PRISE DE DÉCISION (pd3, pd4)
+  { id: 'pd3', dimension: 'prise_decision', weight: 1.8,
+    text: "Vous n'avez pas reçu d'instructions claires pour une situation inhabituelle. Votre hiérarchie est injoignable. Vous :",
+    context: "Dans le ferroviaire, attendre des instructions peut avoir des conséquences réelles sur la circulation.",
+    echelle: ["Attends absolument d'avoir pu joindre quelqu'un de compétent avant d'agir","Essaie longtemps de joindre quelqu'un, puis agis en dernier recours","Évalue rapidement la situation et agis si l'urgence le justifie","Prends une décision raisonnée sur la base de ma formation et mon expérience","Agis immédiatement sur la base de mon analyse — la réactivité prime"] },
+
+  { id: 'pd4', dimension: 'prise_decision', weight: 1.5,
+    text: "Dans votre idéal professionnel, la validation de vos décisions par un supérieur :",
+    context: "Certains métiers demandent une autonomie quasi-totale au quotidien. D'autres fonctionnent en équipe avec validation.",
+    echelle: ["Est rassurante et nécessaire — j'aime savoir que mes décisions sont vérifiées","Est appréciée pour les décisions importantes","Est utile parfois mais je suis capable d'agir seul(e)","Est rarement nécessaire — j'ai confiance en mon jugement","N'est pas ma priorité — l'autonomie décisionnelle est ce que je recherche"] },
+
+  // APTITUDE TECHNIQUE (at3, at4)
+  { id: 'at3', dimension: 'aptitude_technique', weight: 1.8,
+    text: "Face à une procédure technique longue et précise (10 étapes, dans l'ordre, sans erreur possible), vous :",
+    context: "Les conducteurs et techniciens suivent quotidiennement des procédures techniques séquentielles de ce type.",
+    echelle: ["Suis facilement déstabilisé(e) par les procédures longues — le risque d'oubli me stress","Suis les procédures correctement mais avec effort et vérifications multiples","Les suis sans difficulté particulière","Les applique avec rigueur et naturel — la séquence me sécurise","Les procédures précises sont mon environnement naturel — j'aime leur logique implacable"] },
+
+  { id: 'at4', dimension: 'aptitude_technique', weight: 1.5,
+    text: "On vous explique le fonctionnement d'un système technique complexe (pneumatique de freinage, logique de signalisation...). Votre réaction :",
+    context: "La conduite et la maintenance impliquent de comprendre des systèmes techniques interdépendants.",
+    echelle: ["C'est laborieux — je retiens mal les explications techniques abstraites","J'écoute attentivement mais certains aspects m'échappent","Je comprends l'essentiel avec une explication claire","Je comprends vite et cherche à approfondir","J'adore ça — comprendre un système complet m'absorbe complètement"] },
+
+  // SÉCURITÉ / RIGUEUR (rp3, rp4)
+  { id: 'rp3', dimension: 'repetitivite', weight: 2.0,
+    text: "Dans votre travail, un oubli ou une déviation à la procédure peut avoir des conséquences graves. Dans ce contexte, la vérification systématique avant chaque action :",
+    context: "Dans le ferroviaire, la rigueur procédurale n'est pas un choix — c'est une obligation de sécurité.",
+    echelle: ["Me pèse — les vérifications constantes brisent mon rythme naturel","Est une contrainte que j'accepte car c'est le règlement","Ne me pose pas de problème particulier","Est un réflexe naturel que j'applique sans y penser","Est pour moi la base du sérieux professionnel — je ne comprends pas comment on peut s'en passer"] },
+
+  { id: 'rp4', dimension: 'repetitivite', weight: 1.5,
+    text: "Vous avez déjà réalisé cette procédure 500 fois. Ce matin, vous la refaites une fois de plus. Votre vigilance :",
+    context: "La routine peut créer un relâchement dangereux. Certains personnels maintiennent une vigilance intacte après des années.",
+    echelle: ["A tendance à baisser — la répétition émousse naturellement mon attention","Peut fléchir légèrement sur les tâches très répétées","Se maintient correctement avec un effort de concentration","Reste stable — je me rappelle l'enjeu à chaque fois","Est identique à la première fois — la routine ne m'endort pas, elle me professionnalise"] },
+
+  // GESTION DU STRESS (gs2, gs3, gs4)
+  { id: 'gs2', dimension: 'gestion_stress', weight: 1.8,
+    text: "Un incident se produit. Vous devez simultanément : alerter, appliquer une procédure d'urgence et communiquer avec plusieurs interlocuteurs. Vous :",
+    context: "Ce type de situation se produit en conduite ou en poste de régulation. La capacité à gérer la simultanéité sous stress est discriminante.",
+    echelle: ["Suis submergé(e) — je perds mes moyens face à la multiplicité des actions simultanées","Gère difficilement — il m'arrive d'oublier un élément sous pression","Me structure rapidement et agis de manière priorisée","Gère efficacement — la pression multiple m'active","C'est précisément dans ce type de situation que je suis le plus performant(e)"] },
+
+  { id: 'gs3', dimension: 'gestion_stress', weight: 1.5,
+    text: "Les jours où rien ne se passe, où votre vigilance n'est sollicitée par aucun incident, vous :",
+    context: "Le ferroviaire oscille entre longues plages de calme et situations d'urgence soudaines — les deux doivent être gérées.",
+    echelle: ["Vous relaxez pleinement — les journées calmes sont les meilleures","Maintenez une vigilance suffisante tout en relâchant un peu la pression","Maintenez votre niveau d'attention standard","Restez sur le qui-vive malgré le calme apparent — l'imprévu peut survenir à tout moment","Maintenez une vigilance maximale constante — le calme ne signifie pas l'absence de risque"] },
+
+  { id: 'gs4', dimension: 'gestion_stress', weight: 1.2,
+    text: "Après un incident sérieux que vous avez géré seul(e), les heures qui suivent, vous :",
+    context: "La capacité à récupérer mentalement après un incident est importante pour la continuité du service.",
+    echelle: ["Ressentez un choc prolongé — l'incident continue à m'impacter plusieurs heures","Avez besoin d'un moment pour décompresser avant de reprendre normalement","Récupérez assez rapidement et reprenez votre activité","Reprenez presque immédiatement — l'adrénaline retombe vite","Êtes pratiquement dans votre état normal — la gestion d'incident fait partie du travail"] },
+
+  // RELATIONNEL CLIENT (rc4, rc5)
+  { id: 'rc4', dimension: 'relation_client', weight: 1.8,
+    text: "Vous expliquez pour la 50ème fois de la journée la même information à un voyageur perdu. Votre ton et votre patience :",
+    context: "Un agent d'escale ou un contrôleur répond des dizaines de fois par jour aux mêmes questions sans pouvoir le montrer.",
+    echelle: ["Sont nettement altérés — la répétition m'impatiente et ça se sent","Sont maintenus par effort — je dois me contrôler pour rester agréable","Sont constants — la répétition ne m'affecte pas particulièrement","Sont identiques à la première fois — chaque voyageur mérite la même attention","Sont même meilleurs — chaque échange humain m'apporte quelque chose"] },
+
+  { id: 'rc5', dimension: 'relation_client', weight: 1.5,
+    text: "Un voyageur vous sollicite avec une demande impossible à satisfaire (train annulé sans solution de remplacement immédiate). Vous :",
+    context: "La capacité à gérer des situations sans solution parfaite en gardant le lien humain est centrale pour les métiers de contact.",
+    echelle: ["Avez du mal à gérer la frustration du voyageur et votre propre malaise","Gérez mais c'est un exercice difficile qui vous coûte de l'énergie","Gérez correctement en expliquant la situation","Gérez avec empathie en cherchant des alternatives même partielles","Trouvez naturellement les mots pour maintenir le lien malgré l'absence de solution"] },
+
+  // GESTION DES CONFLITS (gc3, gc4)
+  { id: 'gc3', dimension: 'gestion_conflit', weight: 1.8,
+    text: "Un groupe de voyageurs s'emballe collectivement après une annonce difficile (retard majeur, suppression de train). Vous êtes seul(e) face à eux. Vous :",
+    context: "Les incidents en service exposent le personnel à des tensions collectives. La capacité à gérer une foule hostile est rare.",
+    echelle: ["Cherchez immédiatement du renfort — je ne me sens pas capable de gérer seul(e)","Tentez de calmer mais la situation collective me dépasse","Gérez en établissant un dialogue clair et ferme","Gérez en prenant le leadership de la situation pour la désamorcer","Vous sentez dans votre élément — la gestion de tensions collectives m'active"] },
+
+  { id: 'gc4', dimension: 'gestion_conflit', weight: 1.3,
+    text: "Après un conflit professionnel difficile (voyageur agressif, situation tendue), votre gestion émotionnelle :",
+    context: "La résilience émotionnelle après un conflit conditionne la capacité à continuer son service normalement.",
+    echelle: ["Est très longue — le conflit continue à m'impacter et perturbe la suite de mon service","Nécessite du temps — j'ai besoin d'un moment de décompression","Est correcte — je retrouve mon équilibre relativement vite","Est rapide — je coupe mentalement après le conflit","Est immédiate — je passe à la suite sans traîner l'épisode"] },
+
+  // AUTORITÉ (au2, au3)
+  { id: 'au2', dimension: 'autorite', weight: 1.8,
+    text: "Vous devez refuser catégoriquement quelque chose à un voyageur qui insiste et élève la voix devant d'autres personnes. Vous :",
+    context: "Les métiers en contact direct impliquent régulièrement de maintenir une décision ferme face à une pression sociale.",
+    echelle: ["Cédez ou faites une exception pour éviter la confrontation publique","Maintenez votre position mais cherchez une issue rapide pour clore l'échange","Maintenez calmement, expliquez les règles et restez disponible au dialogue","Maintenez fermement en utilisant la procédure comme cadre et appliquant les conséquences","Maintenez, documentez et appliquez — la règle ne négocie pas, quelle que soit la pression"] },
+
+  { id: 'au3', dimension: 'autorite', weight: 1.5,
+    text: "Exercer une forme d'autorité fonctionnelle (faire respecter une règle, contrôler, sanctionner) dans votre activité professionnelle :",
+    context: "Contrôleurs, agents d'escale, chefs de bord : l'autorité fonctionnelle est une dimension centrale de ces postes.",
+    echelle: ["Me met mal à l'aise — je préfère nettement les postes sans dimension d'autorité","Est quelque chose que j'accepte si le poste l'exige, sans l'apprécier particulièrement","Est une dimension neutre — ni cherchée ni redoutée","Est quelque chose que je maîtrise et qui ne me pose aucun problème","Est une dimension que j'apprécie activement dans un travail — la clarté de l'autorité fonctionnelle me convient"] },
+
+  // MULTITÂCHE (mt3)
+  { id: 'mt3', dimension: 'multitache', weight: 1.5,
+    text: "Comparer les deux scénarios : A) surveiller 8 paramètres en temps réel sur écrans multiples / B) conduire sur une voie unique en concentrant toute votre attention. Lequel vous attire le plus ?",
+    context: "Agent de régulation vs conducteur de train : deux métiers ferroviaires radicalement opposés sur la gestion de l'attention.",
+    echelle: ["Clairement B — la concentration totale sur une tâche unique est ce que je recherche","Plutôt B mais A ne m'est pas inaccessible","Aucune préférence nette — les deux m'attirent","Plutôt A mais B me serait accessible","Clairement A — la supervision multi-flux permanente est stimulante"] },
+
+  // ADAPTATION AUX IMPRÉVUS (ai3, ai4)
+  { id: 'ai3', dimension: 'adaptation_imprevus', weight: 1.5,
+    text: "Vous aimeriez que votre journée de travail ressemble à :",
+    context: "Certains postes ferroviaires sont ultra-prévisibles (trajet défini à l'avance), d'autres sont totalement imprévisibles (gestion d'incidents).",
+    echelle: ["Un plan précis et respecté — chaque heure définie à l'avance, peu de surprises","Principalement structuré avec quelques variations mineures","Un équilibre entre routines stables et situations variées","Principalement dynamique avec quelques points fixes","Une succession de situations différentes, sans programme figé — l'adaptabilité permanente m'énergise"] },
+
+  { id: 'ai4', dimension: 'adaptation_imprevus', weight: 1.2,
+    text: "Face à une situation ferroviaire inédite (panne rare, incident inhabituel), pour laquelle vous n'avez pas de procédure préétablie, vous :",
+    context: "Les incidents rares testent la capacité à raisonner hors procédure tout en restant dans le cadre de sécurité.",
+    echelle: ["Suis très déstabilisé(e) — le hors-procédure m'angoisse","Cherche activement quelqu'un qui a la procédure ou l'expérience","Raisonne à partir de ma formation et des principes de sécurité","Analyse rapidement les paramètres disponibles et agis avec méthode","Suis dans mon élément — le raisonnement sous incertitude est ce qui me stimule le plus"] },
 ]
 
 export default function QuizPage() {

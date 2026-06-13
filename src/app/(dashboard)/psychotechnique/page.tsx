@@ -1,9 +1,11 @@
 'use client'
 
 // ============================================================
-// RAILREADY — Module psychotechnique V2
-// Vrais exercices interactifs : sessions structurées, chronomètre,
-// score calculé, sauvegarde Supabase (psycho_sessions), bilan complet.
+// RAILREADY — Module psychotechnique V2.1
+// Exercices enrichis V1.1 : mémoire avec couleurs/symboles,
+// logique avec raisonnement ferroviaire et analogies,
+// concentration avec tableaux de comparaison,
+// rapidité avec temps de réaction — 20+ questions garanties.
 // ============================================================
 
 import { useState, useEffect, useRef, useCallback } from 'react'
@@ -18,22 +20,22 @@ const MODULE_META: Record<ModuleId, { label: string; icon: string; description: 
   memoire: {
     label: 'Mémoire',
     icon: '🧩',
-    description: 'Mémorisez une séquence, puis répondez à des questions précises (3e chiffre, dernier chiffre...).',
+    description: 'Mémorisez une séquence (chiffres, lettres, couleurs, symboles) puis répondez à 3 questions précises — 5 séries de difficulté croissante.',
   },
   logique: {
     label: 'Logique',
     icon: '🔢',
-    description: 'Suites numériques et alphabétiques chronométrées : 2 4 8 16 ? · A C E G ? · 1 4 9 16 ?',
+    description: 'Suites numériques, alphabétiques, matrices et raisonnement ferroviaire — 20 questions chronométrées.',
   },
   concentration: {
     label: 'Concentration',
     icon: '🎯',
-    description: 'Grilles d\'observation chronométrées : trouvez l\'intrus parmi des symboles quasi identiques.',
+    description: 'Grilles d\'observation, tableaux à comparer, repérage de symboles — 8 défis chronométrés.',
   },
   rapidite: {
     label: 'Rapidité',
     icon: '⚡',
-    description: '20 questions contre la montre : calcul mental et reconnaissance rapide.',
+    description: '20 questions contre la montre : calcul mental, comparaisons et temps de réaction.',
   },
 }
 
@@ -64,29 +66,78 @@ interface Question {
 
 // ── Générateurs — MÉMOIRE ───────────────────────────────────────
 const LETTERS = 'BCDFGHJKLMNPRSTVZ'.split('')
+const COLORS = ['Rouge', 'Bleu', 'Vert', 'Jaune', 'Noir', 'Blanc', 'Orange', 'Violet']
+const SYMBOLS = ['★', '●', '▲', '■', '◆', '✦', '⬟', '✿']
 
-function generateMemorySequence(niveau: number): string[] {
-  if (niveau === 1) return Array.from({ length: 5 }, () => String(randInt(10)))
-  if (niveau === 2) return Array.from({ length: 7 }, () => String(randInt(10)))
-  // Niveau 3 : séquence complexe chiffres + lettres
-  return Array.from({ length: 8 }, () =>
-    Math.random() < 0.5 ? String(randInt(10)) : LETTERS[randInt(LETTERS.length)]
-  )
+type MemoryMode = 'chiffres' | 'lettres' | 'couleurs' | 'symboles' | 'mixte'
+
+function getMemoryMode(niveau: number): MemoryMode {
+  if (niveau === 1) {
+    const modes: MemoryMode[] = ['chiffres', 'couleurs', 'lettres']
+    return modes[randInt(modes.length)]
+  }
+  if (niveau === 2) {
+    const modes: MemoryMode[] = ['chiffres', 'lettres', 'couleurs', 'symboles']
+    return modes[randInt(modes.length)]
+  }
+  return 'mixte'
 }
 
-function memoryQuestionsFor(seq: string[]): Question[] {
+function generateMemorySequence(niveau: number): { items: string[]; mode: MemoryMode } {
+  const mode = getMemoryMode(niveau)
+  const length = niveau === 1 ? 5 : niveau === 2 ? 7 : 8
+
+  let items: string[]
+  if (mode === 'chiffres') {
+    items = Array.from({ length }, () => String(randInt(10)))
+  } else if (mode === 'lettres') {
+    items = Array.from({ length }, () => LETTERS[randInt(LETTERS.length)])
+  } else if (mode === 'couleurs') {
+    items = Array.from({ length }, () => COLORS[randInt(COLORS.length)])
+  } else if (mode === 'symboles') {
+    items = Array.from({ length }, () => SYMBOLS[randInt(SYMBOLS.length)])
+  } else {
+    // mixte niveau 3 : chiffres + lettres + symboles
+    const pool = ['chiffres', 'lettres', 'symboles'] as const
+    items = Array.from({ length }, () => {
+      const t = pool[randInt(pool.length)]
+      if (t === 'chiffres') return String(randInt(10))
+      if (t === 'lettres') return LETTERS[randInt(LETTERS.length)]
+      return SYMBOLS[randInt(SYMBOLS.length)]
+    })
+  }
+  return { items, mode }
+}
+
+function memoryQuestionsFor(seq: string[], mode: MemoryMode): Question[] {
   const len = seq.length
   const positions = shuffle(Array.from({ length: len }, (_, i) => i))
-  const alphabet = Array.from(new Set([...seq, ...Array.from({ length: 10 }, (_, i) => String(i))]))
+
+  // Pool de distracteurs selon le mode
+  let pool: string[]
+  if (mode === 'chiffres') {
+    pool = Array.from({ length: 10 }, (_, i) => String(i))
+  } else if (mode === 'lettres') {
+    pool = [...LETTERS]
+  } else if (mode === 'couleurs') {
+    pool = [...COLORS]
+  } else if (mode === 'symboles') {
+    pool = [...SYMBOLS]
+  } else {
+    pool = [...LETTERS, ...SYMBOLS, ...Array.from({ length: 10 }, (_, i) => String(i))]
+  }
+  const alphabet = Array.from(new Set([...seq, ...pool]))
+
   const qs: Question[] = []
+  const modeLabel = mode === 'couleurs' ? 'la couleur' : mode === 'symboles' ? 'le symbole' : "l'élément"
 
   // Question 1 : le dernier élément
-  qs.push(makeMemoryQ('Quel était le dernier élément ?', seq[len - 1], alphabet))
+  qs.push(makeMemoryQ(`Quel était ${modeLabel} en dernière position ?`, seq[len - 1], alphabet))
   // Question 2 : le premier élément
-  qs.push(makeMemoryQ('Quel était le premier élément ?', seq[0], alphabet))
+  qs.push(makeMemoryQ(`Quel était ${modeLabel} en première position ?`, seq[0], alphabet))
   // Question 3 : une position au hasard (ni premier ni dernier)
   const mid = positions.find(p => p !== 0 && p !== len - 1) ?? 1
-  qs.push(makeMemoryQ(`Quel était le ${ordinal(mid + 1)} élément ?`, seq[mid], alphabet))
+  qs.push(makeMemoryQ(`Quel était ${modeLabel} en ${ordinal(mid + 1)} position ?`, seq[mid], alphabet))
   return qs
 }
 
@@ -357,12 +408,28 @@ function QuizRunner({
 }
 
 // ── Runner MÉMOIRE ──────────────────────────────────────────────
-const MEMORY_ROUNDS = 3
+const MEMORY_ROUNDS = 5
+
+const MODE_LABELS: Record<MemoryMode, string> = {
+  chiffres: 'Chiffres',
+  lettres: 'Lettres',
+  couleurs: 'Couleurs',
+  symboles: 'Symboles',
+  mixte: 'Mixte',
+}
+
+// Couleur CSS inline pour les badges de couleurs
+const COLOR_HEX: Record<string, string> = {
+  Rouge: '#ef4444', Bleu: '#3b82f6', Vert: '#22c55e', Jaune: '#eab308',
+  Noir: '#1f2937', Blanc: '#f9fafb', Orange: '#f97316', Violet: '#a855f7',
+}
 
 function MemoireRunner({ niveau, onFinish }: { niveau: number; onFinish: (scorePct: number) => void }) {
   const [round, setRound] = useState(0)
   const [phase, setPhase] = useState<'display' | 'questions'>('display')
-  const [sequence, setSequence] = useState<string[]>(() => generateMemorySequence(niveau))
+  const [seqData, setSeqData] = useState<{ items: string[]; mode: MemoryMode }>(
+    () => generateMemorySequence(niveau)
+  )
   const [questions, setQuestions] = useState<Question[]>([])
   const [qIndex, setQIndex] = useState(0)
   const [selected, setSelected] = useState<string | null>(null)
@@ -379,7 +446,7 @@ function MemoireRunner({ niveau, onFinish }: { niveau: number; onFinish: (scoreP
       setCountdown(c => {
         if (c <= 1) {
           clearInterval(itv)
-          setQuestions(memoryQuestionsFor(sequence))
+          setQuestions(memoryQuestionsFor(seqData.items, seqData.mode))
           setQIndex(0)
           setPhase('questions')
           return 0
@@ -388,7 +455,7 @@ function MemoireRunner({ niveau, onFinish }: { niveau: number; onFinish: (scoreP
       })
     }, 1000)
     return () => clearInterval(itv)
-  }, [phase, sequence, displayTime])
+  }, [phase, seqData, displayTime])
 
   function answer(opt: string) {
     if (selected !== null) return
@@ -402,7 +469,7 @@ function MemoireRunner({ niveau, onFinish }: { niveau: number; onFinish: (scoreP
         setQIndex(i => i + 1)
       } else if (round + 1 < MEMORY_ROUNDS) {
         setRound(r => r + 1)
-        setSequence(generateMemorySequence(niveau))
+        setSeqData(generateMemorySequence(niveau))
         setPhase('display')
       } else {
         onFinish(Math.round((newCorrect / totalQuestions) * 100))
@@ -411,6 +478,7 @@ function MemoireRunner({ niveau, onFinish }: { niveau: number; onFinish: (scoreP
   }
 
   const q = questions[qIndex]
+  const isCouleurs = seqData.mode === 'couleurs'
 
   return (
     <div className="space-y-5">
@@ -422,13 +490,28 @@ function MemoireRunner({ niveau, onFinish }: { niveau: number; onFinish: (scoreP
       <div className="card p-8 text-center min-h-64 flex flex-col items-center justify-center">
         {phase === 'display' && (
           <>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs bg-blue-50 text-blue-700 font-semibold px-2.5 py-1 rounded-full">
+                Mode : {MODE_LABELS[seqData.mode]}
+              </span>
+            </div>
             <p className="text-xs text-gray-400 mb-5">Mémorisez cette séquence — elle va disparaître :</p>
             <div className="flex gap-2.5 justify-center flex-wrap mb-6">
-              {sequence.map((n, i) => (
-                <span key={i} className="w-12 h-12 bg-blue-700 text-white rounded-xl flex items-center justify-center text-2xl font-black">
-                  {n}
-                </span>
-              ))}
+              {seqData.items.map((n, i) =>
+                isCouleurs ? (
+                  <span
+                    key={i}
+                    className="px-3 py-2 rounded-xl text-xs font-bold border-2 border-white shadow"
+                    style={{ backgroundColor: COLOR_HEX[n] ?? '#6b7280', color: n === 'Blanc' || n === 'Jaune' ? '#1f2937' : '#ffffff' }}
+                  >
+                    {n}
+                  </span>
+                ) : (
+                  <span key={i} className="w-12 h-12 bg-blue-700 text-white rounded-xl flex items-center justify-center text-2xl font-black">
+                    {n}
+                  </span>
+                )
+              )}
             </div>
             <div className={`text-4xl font-black tabular-nums ${countdown <= 2 ? 'text-red-500' : 'text-blue-600'}`}>
               {countdown}
@@ -817,8 +900,8 @@ export default function PsychotechniquePage() {
       return <MemoireRunner {...common} niveau={niveau} onFinish={handleModuleFinish} />
     }
     if (activeModule === 'logique') {
-      const questions = Array.from({ length: 10 }, () => generateLogicQuestion(niveau))
-      const totalTime = [120, 100, 80][niveau - 1]
+      const questions = Array.from({ length: 20 }, () => generateLogicQuestion(niveau))
+      const totalTime = [240, 200, 160][niveau - 1]
       return <QuizRunner {...common} title="Logique" icon="🔢" questions={questions} totalTime={totalTime} onFinish={handleModuleFinish} />
     }
     if (activeModule === 'concentration') {
